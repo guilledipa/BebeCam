@@ -1,0 +1,37 @@
+---
+- name: Install watchdog package
+  ansible.builtin.apt:
+    name: watchdog
+    state: present
+  become: true
+
+- name: Enable hardware watchdog in config.txt
+  ansible.builtin.lineinfile:
+    path: /boot/config.txt
+    line: "dtparam=watchdog=on"
+    state: present
+  become: true
+  notify: Reboot rpi
+
+- name: Configure watchdog daemon
+  ansible.builtin.template:
+    src: watchdog.conf.j2
+    dest: /etc/watchdog.conf
+    mode: "0644"
+  become: true
+  notify: Restart watchdog
+
+- name: Enable and start watchdog service
+  ansible.builtin.systemd:
+    name: watchdog
+    enabled: true
+    state: started
+  become: true
+
+- name: Optimize logging to RAM via tmpfs
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    line: "tmpfs /var/log tmpfs defaults,noatime,nosuid,mode=0755,size=10m 0 0"
+    state: present
+  become: true
+  notify: Reboot rpi

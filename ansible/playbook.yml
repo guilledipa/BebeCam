@@ -1,0 +1,44 @@
+- name: Install and Configure BebeCam
+  hosts: raspi
+  vars:
+    project_root: "/home/guilledipa/Documents/Go/BebeCam"
+    install_dir: "/opt/bebecam"
+    ap_ssid: "BebeCam"
+    ap_password: "bebecam_pass"
+    ap_ip_addr: "192.168.4.1/24"
+    mediamtx_version: "v1.9.0"
+    # Map Ansible architecture to MediaMTX release naming
+    mediamtx_arch_map:
+      aarch64: "linux_arm64v8"
+      armv7l: "linux_armv7"
+      x86_64: "linux_amd64"
+    mediamtx_arch: "{{ mediamtx_arch_map[ansible_architecture] | default('linux_amd64') }}"
+
+  handlers:
+    - name: Restart mediamtx
+      ansible.builtin.systemd:
+        name: mediamtx
+        state: restarted
+      become: true
+
+    - name: Restart dashboard
+      ansible.builtin.systemd:
+        name: bebecam-dashboard
+        state: restarted
+      become: true
+
+    - name: Restart watchdog
+      ansible.builtin.systemd:
+        name: watchdog
+        state: restarted
+      become: true
+
+    - name: Reboot rpi
+      ansible.builtin.reboot:
+      become: true
+
+  roles:
+    - role: ap
+    - role: mediamtx
+    - role: dashboard
+    - role: hardening

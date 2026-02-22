@@ -1,0 +1,60 @@
+---
+- name: Ensure install directory exists
+  ansible.builtin.file:
+    path: "{{ install_dir }}/web"
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "0755"
+  become: true
+
+- name: Copy dashboard static files
+  ansible.builtin.copy:
+    src: "{{ project_root }}/web/index.html"
+    dest: "{{ install_dir }}/web/index.html"
+    mode: "0644"
+  become: true
+
+- name: Build Go dashboard binary locally
+  ansible.builtin.command: go build -o bebecam main.go
+  args:
+    chdir: "{{ project_root }}"
+  delegate_to: localhost
+  become: false
+  changed_when: true
+
+- name: Copy dashboard binary to install directory
+  ansible.builtin.copy:
+    src: "{{ project_root }}/bebecam"
+    dest: "{{ install_dir }}/bebecam"
+    mode: "0755"
+  become: true
+
+- name: Create BebeCam Dashboard systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/bebecam-dashboard.service
+    content: |
+      [Unit]
+      Description=BebeCam Dashboard Server
+      After=network.target
+
+      [Service]
+      ExecStart={{ install_dir }}/bebecam
+      Restart=always
+      RestartSec=5
+      StartLimitIntervalSec=0
+      User={{ ansible_user }}
+      WorkingDirectory={{ install_dir }}
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  become: true
+  notify: Restart dashboard
+
+- name: Enable and start BebeCam Dashboard
+  ansible.builtin.systemd:
+    name: bebecam-dashboard
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true

@@ -1,0 +1,15 @@
+paths:
+  bebe:
+    runOnInit: >
+      libcamera-vid -t 0 --inline -n --width 1280 --height 720 --framerate 30 --codec libav --libav-format mpegts -o - | 
+      ffmpeg -i - -c copy -f rtsp rtsp://localhost:$RTSP_PORT/bebe
+    runOnInitRestart: yes
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcICEUDP: yes
+webrtcServerHeader: MediaMTX
+
+hls: yes
+
+logLevel: info

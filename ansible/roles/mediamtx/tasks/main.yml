@@ -1,0 +1,61 @@
+---
+- name: Install mediamtx dependencies
+  ansible.builtin.apt:
+    name:
+      - ffmpeg
+      - libcamera-apps
+      - wget
+    state: present
+    update_cache: true
+  become: true
+
+- name: Check if MediaMTX is installed
+  ansible.builtin.stat:
+    path: /usr/local/bin/mediamtx
+  register: mediamtx_bin
+
+- name: Download and install MediaMTX
+  when: not mediamtx_bin.stat.exists
+  block:
+    - name: Download MediaMTX tarball
+      ansible.builtin.get_url:
+        url: "https://github.com/bluenviron/mediamtx/releases/download/{{ mediamtx_version }}/mediamtx_{{ mediamtx_version }}_{{ mediamtx_arch }}.tar.gz"
+        dest: /tmp/mediamtx.tar.gz
+        mode: "0644"
+
+    - name: Extract MediaMTX
+      ansible.builtin.unarchive:
+        src: /tmp/mediamtx.tar.gz
+        dest: /tmp
+        remote_src: true
+
+    - name: Install MediaMTX binary
+      ansible.builtin.copy:
+        src: /tmp/mediamtx
+        dest: /usr/local/bin/mediamtx
+        mode: "0755"
+        remote_src: true
+      become: true
+
+- name: Deploy MediaMTX configuration
+  ansible.builtin.template:
+    src: mediamtx.yml.j2
+    dest: "{{ install_dir }}/mediamtx.yml"
+    mode: "0644"
+  become: true
+
+- name: Create MediaMTX systemd service
+  ansible.builtin.template:
+    src: mediamtx.service.j2
+    dest: /etc/systemd/system/mediamtx.service
+    mode: "0644"
+  become: true
+  notify: Restart mediamtx
+
+- name: Enable and start MediaMTX
+  ansible.builtin.systemd:
+    name: mediamtx
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true

@@ -1,0 +1,24 @@
+# BebeCam Gitignore
+
+# Ansible files
+.ansible/
+*.retry
+
+# VS Code
+.vscode/
+
+# Compiled Go binary
+bebecam
+
+# Local temporary files
+/tmp/*
+*.tar.gz
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Python bytecode (used by Ansible)
+__pycache__/
+*.py[cod]
+*$py.class

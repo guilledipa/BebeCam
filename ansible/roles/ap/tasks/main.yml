@@ -1,0 +1,31 @@
+---
+- name: Check if Wi-Fi connection exists
+  ansible.builtin.command: nmcli con show "{{ ap_ssid }}"
+  register: ap_wifi_con_check
+  failed_when: false
+  changed_when: false
+
+- name: Create Wi-Fi Hotspot connection (Workaround for nmcli module bug)
+  ansible.builtin.command: >
+    nmcli con add type wifi ifname wlan0 mode ap con-name "{{ ap_ssid }}" ssid "{{ ap_ssid }}"
+  when: ap_wifi_con_check.rc != 0
+  become: true
+  changed_when: true
+
+- name: Configure Hotspot IP and Security
+  community.general.nmcli:
+    conn_name: "{{ ap_ssid }}"
+    state: present
+    gw4: "{{ ap_ip_addr | ansible.utils.ipaddr('address') }}"
+    ip4: "{{ ap_ip_addr }}"
+    method4: shared
+    wifi_sec:
+      key-mgmt: wpa-psk
+      psk: "{{ ap_password }}"
+  become: true
+
+- name: Bring Hotspot up
+  community.general.nmcli:
+    conn_name: "{{ ap_ssid }}"
+    state: up
+  become: true
