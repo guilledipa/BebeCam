@@ -5,15 +5,7 @@
     state: present
   become: true
 
-- name: Enable hardware watchdog in config.txt
-  ansible.builtin.lineinfile:
-    path: /boot/config.txt
-    line: "dtparam=watchdog=on"
-    state: present
-  become: true
-  notify: Reboot rpi
-
-- name: Configure watchdog daemon
+- name: Enable hardware watchdog (Radxa Zero 3W)
   ansible.builtin.template:
     src: watchdog.conf.j2
     dest: /etc/watchdog.conf
@@ -34,4 +26,4 @@
     line: "tmpfs /var/log tmpfs defaults,noatime,nosuid,mode=0755,size=10m 0 0"
     state: present
   become: true
-  notify: Reboot rpi
+  notify: Reboot system

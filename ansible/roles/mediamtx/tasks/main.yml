@@ -3,7 +3,8 @@
   ansible.builtin.apt:
     name:
       - ffmpeg
-      - libcamera-apps
+      - gstreamer1.0-plugins-bad
+      - gstreamer1.0-tools
       - wget
     state: present
     update_cache: true

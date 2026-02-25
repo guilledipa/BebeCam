@@ -1,8 +1,8 @@
 paths:
   bebe:
     runOnInit: >
-      libcamera-vid -t 0 --inline -n --width 1280 --height 720 --framerate 30 --codec libav --libav-format mpegts -o - | 
-      ffmpeg -i - -c copy -f rtsp rtsp://localhost:$RTSP_PORT/bebe
+      gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=30 ! 
+      mpph264enc ! h264parse ! rtspclientsink location=rtsp://localhost:$RTSP_PORT/bebe
     runOnInitRestart: yes
 
 webrtc: yes

@@ -7,7 +7,7 @@
 
 - name: Create Wi-Fi Hotspot connection (Workaround for nmcli module bug)
   ansible.builtin.command: >
-    nmcli con add type wifi ifname wlan0 mode ap con-name "{{ ap_ssid }}" ssid "{{ ap_ssid }}"
+    nmcli con add type wifi ifname "{{ wifi_interface }}" mode ap con-name "{{ ap_ssid }}" ssid "{{ ap_ssid }}"
   when: ap_wifi_con_check.rc != 0
   become: true
   changed_when: true

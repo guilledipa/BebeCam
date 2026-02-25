@@ -1,0 +1,12 @@
+[Unit]
+Description=MediaMTX Server
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/mediamtx {{ install_dir }}/mediamtx.yml
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=0
+
+[Install]
+WantedBy=multi-user.target
