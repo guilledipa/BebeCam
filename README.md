@@ -59,6 +59,13 @@ ansible-playbook -i inventory.ini playbook.yml
     - `hardening`: Activa medidas de seguridad y resiliencia del sistema.
     - `dashboard`: Despliega una pequeña aplicación web en Go para visualizar el stream.
 
+## Roadmap 🚀
+
+Próximas mejoras planeadas para aprovechar al máximo la Radxa Zero 3W:
+
+- [ ] **Detección de Sueño**: Uso del NPU para identificar si el bebé tiene los ojos abiertos o cerrados.
+- [ ] **Alerta de Obstrucción**: Detección inteligente si algo tapa la cara del bebé o la cámara.
+
 ## Licencia
 
 Este proyecto está bajo la licencia MIT.

@@ -1,7 +1,7 @@
 paths:
   bebe:
     runOnInit: >
-      gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1280,height=720,framerate=30 ! 
+      gst-launch-1.0 v4l2src device=/dev/video0 ! video/x-raw,width=1920,height=1080,framerate=30 ! 
       mpph264enc ! h264parse ! rtspclientsink location=rtsp://localhost:$RTSP_PORT/bebe
     runOnInitRestart: yes
 
