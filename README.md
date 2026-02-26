@@ -40,9 +40,19 @@ El secreto de la latencia ultra-baja y la estabilidad de BebeCam v1.0 radica en 
 El despliegue se maneja íntegramente a través de **Ansible**. El playbook configura repositorios, permisos, dependencias y compila Go automáticamente.
 
 1. Clona este repositorio en un ordenador con Ansible.
-2. Edita `ansible/inventory.ini` con la IP de tu placa:
+2. Ingresa a la carpeta `ansible` y crea tu archivo de secretos locales (este archivo no se subirá a GitHub por seguridad):
 ```bash
 cd ansible
+mkdir -p vars
+cat << 'EOF' > vars/secrets.yml
+ap_password: "bebecam_auto"
+wifi_ssid: "MI_RED_DE_CASA"
+EOF
+```
+*(Asegurate de cambiar `MI_RED_DE_CASA` por el nombre real de tu Wi-Fi para no perder conexión SSH en el futuro)*.
+
+3. Edita `inventory.ini` con la IP de tu placa y ejecuta:
+```bash
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
