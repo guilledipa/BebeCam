@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -10,16 +11,20 @@
         :root {
             --bg-start: #1e1b4b; /* Deep Indigo */
             --bg-end: #0f172a; /* Slate 900 */
-            --glass-bg: rgba(30, 41, 59, 0.4); 
+            --glass-bg: rgba(30, 41, 59, 0.4);
             --glass-border: rgba(255, 255, 255, 0.15);
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --live-glow: #f43f5e; /* Rose 500 */
             --btn-gradient-1: #6366f1; /* Indigo 500 */
             --btn-gradient-2: #a855f7; /* Purple 500 */
+            /* Default video filters */
+            --video-brightness: 100%;
+            --video-contrast: 100%;
         }
 
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -30,7 +35,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            overscroll-behavior-y: none;
+            overscroll-behavior: none;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -40,7 +45,7 @@
             z-index: 50;
             position: absolute;
             width: 100%;
-            pointer-events: none; /* Let the container pass clicks, children re-enable */
+            pointer-events: none;
         }
 
         .ui-hidden {
@@ -59,7 +64,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(to bottom, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0) 100%);
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0) 100%);
             pointer-events: auto;
             box-sizing: border-box;
         }
@@ -79,8 +84,14 @@
             background: linear-gradient(135deg, #c7d2fe, #e0e7ff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 16px rgba(199,210,254,0.3);
+            text-shadow: 0 4px 16px rgba(199, 210, 254, 0.3);
             margin-bottom: -4px;
+        }
+
+        .brand-subtitle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .brand-subtitle {
@@ -89,6 +100,52 @@
             color: #818cf8;
             letter-spacing: 0.15em;
             text-transform: uppercase;
+        }
+
+        .battery-indicator {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a7f3d0;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: none; /* hidden until supported load */
+        }
+        .battery-indicator.warning {
+            color: #fca5a5;
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .top-right-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-icon-only {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all 0.2s;
+        }
+        .btn-icon-only:active { transform: scale(0.9); }
+        .btn-icon-only.active {
+            background: rgba(250, 204, 21, 0.2);
+            border-color: rgba(250, 204, 21, 0.5);
+            color: #fde047;
         }
 
         /* Glowing Live Badge */
@@ -102,7 +159,23 @@
             padding: 8px 20px;
             border-radius: 99px;
             border: 1px solid rgba(244, 63, 94, 0.3);
-            box-shadow: 0 8px 16px -4px rgba(244, 63, 94, 0.2), inset 0 1px 1px rgba(255,255,255,0.1);
+            box-shadow: 0 8px 16px -4px rgba(244, 63, 94, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .live-indicator.reconnecting {
+            background: rgba(250, 204, 21, 0.15);
+            border-color: rgba(250, 204, 21, 0.3);
+            box-shadow: none;
+        }
+        .live-indicator.reconnecting .live-dot {
+            background-color: #facc15;
+            box-shadow: 0 0 10px #facc15;
+            animation: none;
+        }
+        .live-indicator.reconnecting .live-text {
+            color: #fef08a;
+            text-shadow: none;
         }
 
         .live-dot {
@@ -120,7 +193,7 @@
             color: #ffe4e6;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(244,63,94,0.5);
+            text-shadow: 0 2px 4px rgba(244, 63, 94, 0.5);
         }
 
         @keyframes pulse {
@@ -137,6 +210,17 @@
             justify-content: center;
             background-color: #000;
             z-index: 10;
+            overflow: hidden; /* For zooming */
+        }
+
+        .video-transform-layer {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out; /* smooth snapping during pinch */
         }
 
         iframe {
@@ -144,14 +228,97 @@
             height: 100%;
             border: none;
             object-fit: contain;
-            pointer-events: none; /* Let touches hit the wrapper to wake up UI */
+            pointer-events: none;
+            filter: brightness(var(--video-brightness)) contrast(var(--video-contrast));
+            transition: filter 0.3s;
         }
 
-        /* Interactive overlay for waking up UI */
+        /* Night Mode Overlay */
+        .night-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: 20;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .night-overlay.active { opacity: 1; }
+
+        /* Interactive layer */
         .interaction-layer {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             z-index: 40;
+            touch-action: none; /* Crucial for custom Pinch to Zoom */
+        }
+
+        /* Settings Panel */
+        .settings-panel {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .settings-panel.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .setting-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .setting-row label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]:focus { outline: none; }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
 
         /* Bottom Controls */
@@ -165,7 +332,7 @@
 
         .controls-bar {
             display: flex;
-            gap: 16px;
+            gap: 12px;
             padding: 12px;
             background: var(--glass-bg);
             backdrop-filter: blur(24px);
@@ -173,41 +340,37 @@
             border: 1px solid var(--glass-border);
             border-radius: 32px;
             pointer-events: auto;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255,255,255,0.15);
-            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            max-width: 600px;
             width: 100%;
         }
 
         .btn {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid transparent;
             color: white;
-            padding: 18px 28px;
+            padding: 16px 20px;
             border-radius: 20px;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             font-family: inherit;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             letter-spacing: 0.02em;
         }
 
-        .btn:active {
-            transform: scale(0.92);
-        }
+        .btn:active { transform: scale(0.92); }
 
-        .btn-refresh {
-            color: #f8fafc;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .btn-settings { color: #cbd5e1; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-refresh { color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); }
 
         .btn-fullscreen {
             background: linear-gradient(135deg, var(--btn-gradient-1), var(--btn-gradient-2));
-            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5), inset 0 1px 1px rgba(255,255,255,0.3);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.3);
             border: none;
             flex-grow: 1;
         }
@@ -216,7 +379,7 @@
             width: 24px;
             height: 24px;
             fill: currentColor;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .hint {
@@ -226,38 +389,78 @@
             text-align: center;
             font-size: 0.85rem;
             font-weight: 600;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.4);
             pointer-events: none;
             letter-spacing: 0.05em;
         }
-
     </style>
 </head>
+
 <body>
 
     <div class="video-wrapper" id="videoWrapper">
-        <iframe id="streamFrame" src="" allow="autoplay; fullscreen; playsinline"></iframe>
+        <div class="video-transform-layer" id="videoTransform">
+            <iframe id="streamFrame" src="" allow="autoplay; fullscreen; playsinline"></iframe>
+            </div>
     </div>
+
+    <!-- Night mode dim layer -->
+    <div class="night-overlay" id="nightOverlay"></div>
     
-    <!-- Invisible layer to catch taps -->
+    <!-- Invisible layer to catch taps and pinches -->
     <div class="interaction-layer" id="interactionLayer"></div>
-    
+
     <!-- UI Overlay -->
     <div class="ui-layer top-bar" id="uiTop">
         <div class="brand">
             <div class="brand-text">
                 <span class="brand-title">BebeCam</span>
-                <span class="brand-subtitle">Cámara Trasera</span>
+                <div class="brand-subtitle-container">
+                    <span class="brand-subtitle">Cámara Trasera</span>
+                    <div class="battery-indicator" id="batteryInd">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17 6H3a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zm-1 8H4V10h12v4zm4-5v6h2V9h-2z" />
+                        </svg>
+                        <span id="batteryTxt">--%</span>
+                    </div>
+                    </div>
             </div>
-        </div>
-        <div class="live-indicator">
-            <div class="live-dot"></div>
-            <span class="live-text">En Vivo</span>
+            </div>
+            <div class="top-right-controls">
+                <button class="btn-icon-only" id="nightModeBtn" aria-label="Modo Noche en Ruta">
+                    <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                        <path
+                            d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+                    </svg>
+                </button>
+                <div class="live-indicator" id="liveInd">
+                    <div class="live-dot"></div>
+                <span class="live-text" id="liveTxt">En Vivo</span>
+                </div>
         </div>
     </div>
 
+    <!-- Settings Panel -->
+    <div class="settings-panel" id="settingsPanel">
+        <div class="setting-row">
+            <label>Brillo <span id="valBrightness">100%</span></label>
+            <input type="range" id="sliderBrightness" min="20" max="200" value="100">
+        </div>
+        <div class="setting-row">
+            <label>Contraste <span id="valContrast">100%</span></label>
+            <input type="range" id="sliderContrast" min="50" max="200" value="100">
+        </div>
+    </div>
+    
+    <!-- Bottom Action Bar -->
     <div class="ui-layer controls-container" id="uiBottom">
         <div class="controls-bar">
+            <button class="btn btn-settings" id="toggleSettingsBtn" aria-label="Ajustes Visuales">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                        d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.73 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+                </svg>
+            </button>
             <button class="btn btn-refresh" onclick="reloadStream()" aria-label="Recargar Video">
                 <svg class="icon" viewBox="0 0 24 24">
                     <path
@@ -268,33 +471,174 @@
                 <svg class="icon" viewBox="0 0 24 24" id="fsIcon">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
                 </svg>
-                <span id="fsText">Pantalla Completa</span>
+                <span id="fsText">Pantalla</span>
             </button>
         </div>
     </div>
-    <div class="ui-layer hint" id="uiHint">Toca la pantalla para ocultar/mostrar controles</div>
+    <div class="ui-layer hint" id="uiHint">Toca o pellizca el video</div>
 
     <script>
         const host = window.location.hostname;
         const iframe = document.getElementById('streamFrame');
-        iframe.src = `http://${host}:8889/bebe`;
+            const port = 8889;
+            const streamUrl = `http://${host}:${port}/bebe`;
+            iframe.src = streamUrl;
+
+            // Auto-Reconnect Logic
+            const liveInd = document.getElementById('liveInd');
+            const liveTxt = document.getElementById('liveTxt');
+            let checkActive = true;
+
+            async function checkConnection() {
+                if (!checkActive) return;
+                try {
+                    // Quick shallow check against the root API without disrupting iframe
+                    const res = await fetch(`http://${host}:9997/v3/paths/list`, { method: 'GET', signal: AbortSignal.timeout(3000) });
+                    if (res.ok) {
+                        liveInd.classList.remove('reconnecting');
+                        liveTxt.textContent = "EN VIVO";
+                    } else {
+                        throw new Error("HTTP Not OK");
+                    }
+                } catch (err) {
+                    // We lost connection to mediamtx
+                    liveInd.classList.add('reconnecting');
+                    liveTxt.textContent = "CONECTANDO...";
+                    // Try to forcefully reload the iframe
+                    console.log("Connection lost, auto-reloading...");
+                    iframe.src = '';
+                    setTimeout(() => { iframe.src = streamUrl; }, 1000);
+                }
+            }
+            setInterval(checkConnection, 5000); // Check every 5s
 
             function reloadStream() {
             const currentSrc = iframe.src;
             iframe.src = '';
             setTimeout(() => { iframe.src = currentSrc; }, 50);
-            wakeUI(); 
-        }
+                    wakeUI();
+                }
 
-        // Fullscreen Logic
+                // Night Mode
+                const nightModeBtn = document.getElementById('nightModeBtn');
+                const nightOverlay = document.getElementById('nightOverlay');
+                let isNightMode = false;
+                nightModeBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    isNightMode = !isNightMode;
+                    nightOverlay.classList.toggle('active');
+                    nightModeBtn.classList.toggle('active');
+                });
+
+                // Settings Sliders
+                const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+                const settingsPanel = document.getElementById('settingsPanel');
+                let isSettingsOpen = false;
+
+                toggleSettingsBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    isSettingsOpen = !isSettingsOpen;
+                    settingsPanel.classList.toggle('active');
+            wakeUI(); 
+            if (isSettingsOpen) clearTimeout(hideTimeout); // keep UI open while settings open
+        });
+
+                const sBrightness = document.getElementById('sliderBrightness');
+                const sContrast = document.getElementById('sliderContrast');
+                const vBrightness = document.getElementById('valBrightness');
+                const vContrast = document.getElementById('valContrast');
+
+                function updateVideoFilters() {
+                    document.documentElement.style.setProperty('--video-brightness', `${sBrightness.value}%`);
+                    document.documentElement.style.setProperty('--video-contrast', `${sContrast.value}%`);
+                    vBrightness.textContent = `${sBrightness.value}%`;
+                    vContrast.textContent = `${sContrast.value}%`;
+                }
+                sBrightness.addEventListener('input', updateVideoFilters);
+                sContrast.addEventListener('input', updateVideoFilters);
+
+                // Prevent events on settings panel from bubbling to the interactive layer
+                settingsPanel.addEventListener('touchstart', e => e.stopPropagation());
+                settingsPanel.addEventListener('touchmove', e => e.stopPropagation());
+                settingsPanel.addEventListener('click', e => e.stopPropagation());
+
+
+                // Pinch to Zoom Logic
+                const interactionLayer = document.getElementById('interactionLayer');
+                const videoTransformLayer = document.getElementById('videoTransform');
+
+                let currentScale = 1;
+                let currentX = 0;
+                let currentY = 0;
+
+                let initialPinchDistance = null;
+                let initialScale = 1;
+
+                let initialTouchX = 0;
+                let initialTouchY = 0;
+                let initialPanX = 0;
+                let initialPanY = 0;
+
+                function getDistance(touches) {
+                    return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+                }
+
+                function applyTransform() {
+                    videoTransformLayer.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
+                }
+
+                interactionLayer.addEventListener('touchstart', (e) => {
+                    if (e.touches.length === 2) {
+                        // Start pincho
+                        initialPinchDistance = getDistance(e.touches);
+                        initialScale = currentScale;
+                    } else if (e.touches.length === 1 && currentScale > 1) {
+                        // Start pan if zoomed in
+                        initialTouchX = e.touches[0].pageX;
+                        initialTouchY = e.touches[0].pageY;
+                        initialPanX = currentX;
+                        initialPanY = currentY;
+                    }
+                });
+
+                interactionLayer.addEventListener('touchmove', (e) => {
+                    if (e.touches.length === 2) {
+                        // Zooming
+                        e.preventDefault();
+                        const currentDistance = getDistance(e.touches);
+                        const scaleFactor = currentDistance / initialPinchDistance;
+                        currentScale = Math.min(Math.max(1, initialScale * scaleFactor), 4); // Limit zoom 1x - 4x
+                        applyTransform();
+                    } else if (e.touches.length === 1 && currentScale > 1) {
+                        // Panning
+                        e.preventDefault();
+                        const deltaX = e.touches[0].pageX - initialTouchX;
+                        const deltaY = e.touches[0].pageY - initialTouchY;
+                        currentX = initialPanX + deltaX;
+                        currentY = initialPanY + deltaY;
+                        applyTransform();
+                    }
+                });
+
+                interactionLayer.addEventListener('touchend', (e) => {
+                    if (e.touches.length < 2) {
+                        initialPinchDistance = null;
+                    }
+                    // Constrain pan when zoom ends/panning ends
+                    if (currentScale === 1) {
+                        currentX = 0;
+                        currentY = 0;
+                        applyTransform();
+            }
+        });
+
+            // Double Tap and UI Auto-Hide
         const fsText = document.getElementById('fsText');
         const fsIcon = document.getElementById('fsIcon');
-        
+
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.log(`Fullscreen error: ${err.message}`);
-                });
+                document.documentElement.requestFullscreen().catch(err => { console.log(err); });
             } else {
                 if (document.exitFullscreen) { document.exitFullscreen(); }
             }
@@ -306,72 +650,91 @@
                 fsText.textContent = "Salir";
                 fsIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
             } else {
-                fsText.textContent = "Pantalla Completa";
+                fsText.textContent = "Pantalla";
                 fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
             }
         });
 
-            // Auto-Hide UI Logic
             let hideTimeout;
             const uiElements = [document.getElementById('uiTop'), document.getElementById('uiBottom'), document.getElementById('uiHint')];
             let isUIHidden = false;
 
             function hideUI() {
-                uiElements.forEach(el => el.classList.add('ui-hidden'));
-                isUIHidden = true;
-            }
+            if (isSettingsOpen) return; // Don't auto-hide if settings are open
+            uiElements.forEach(el => el.classList.add('ui-hidden'));
+            isUIHidden = true;
+        }
 
             function wakeUI() {
                 uiElements.forEach(el => el.classList.remove('ui-hidden'));
                 isUIHidden = false;
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(hideUI, 4000);
+        }
 
-                clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(hideUI, 3500); // Auto hide after 3.5s
-            }
-
-            // Tap interactions
-        let lastTap = 0;
-            const interactionLayer = document.getElementById('interactionLayer');
-
+            let lastTap = 0;
             interactionLayer.addEventListener('touchend', function (e) {
-                e.preventDefault(); // Prevent ghost clicks
-
+            if (e.changedTouches.length > 1) return; // Ignore if it was a pinch release
+            
             // Handle double tap
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
 
-            if (tapLength < 400 && tapLength > 0) {
+            if (tapLength < 400 && tapLength > 0 && currentScale === 1) { // Only allow double tap full screen if not zoomed
                 toggleFullScreen();
-            } else {
-                // Single tap: toggle UI
-                if (isUIHidden) {
-                    wakeUI();
-                } else {
-                    hideUI();
+            } else if (e.target === interactionLayer) {
+                if (isSettingsOpen) {
+                    isSettingsOpen = false;
+                    settingsPanel.classList.remove('active');
                 }
+
+                if (isUIHidden) { wakeUI(); }
+                else { hideUI(); }
             }
             lastTap = currentTime;
         });
 
             interactionLayer.addEventListener('mousemove', wakeUI);
 
-            // Wake Lock API - Prevent screen from turning off
+            // Battery API
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(function (battery) {
+                    const bInd = document.getElementById('batteryInd');
+                    const bTxt = document.getElementById('batteryTxt');
+                    bInd.style.display = 'flex';
+
+                    function updateBattery() {
+                        const level = Math.round(battery.level * 100);
+                        bTxt.textContent = `${level}%`;
+                        if (level <= 20 && !battery.charging) bInd.classList.add('warning');
+                        else bInd.classList.remove('warning');
+                    }
+                    updateBattery();
+                    battery.addEventListener('levelchange', updateBattery);
+                    battery.addEventListener('chargingchange', updateBattery);
+                });
+            }
+
+            // Wake Lock API 
             let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
                     wakeLock = await navigator.wakeLock.request('screen');
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { }
         }
 
         document.addEventListener('visibilitychange', () => {
             if (wakeLock !== null && document.visibilityState === 'visible') { requestWakeLock(); }
+            checkActive = document.visibilityState === 'visible';
+            if (checkActive) checkConnection();
         });
-        
-            wakeUI();
+
+    wakeUI();
         document.body.addEventListener('touchstart', requestWakeLock, { once: true });
             document.body.addEventListener('click', requestWakeLock, { once: true });
     </script>
 </body>
+
 </html>
