@@ -59,4 +59,6 @@ ansible-playbook -i inventory.ini playbook.yml
 
 ## Licencia
 
-Este proyecto se distribuye bajo la licencia MIT.
+Este proyecto es Software Libre y de Código Abierto (FOSS), distribuido bajo la licencia **GNU General Public License v3.0 (GPLv3)**. 
+
+Podés usar, modificar y compartir BebeCam libremente, siempre y cuando cualquier proyecto modificado o derivado que distribuyas mantenga también la misma licencia abierta. Para más detalles, revisá el archivo `LICENSE`.
