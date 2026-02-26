@@ -38,12 +38,20 @@
         remote_src: true
       become: true
 
+- name: Ensure MediaMTX install directory exists
+  ansible.builtin.file:
+    path: "{{ install_dir }}"
+    state: directory
+    mode: "0755"
+  become: true
+
 - name: Deploy MediaMTX configuration
   ansible.builtin.template:
     src: mediamtx.yml.j2
     dest: "{{ install_dir }}/mediamtx.yml"
     mode: "0644"
   become: true
+  notify: Restart mediamtx
 
 - name: Create MediaMTX systemd service
   ansible.builtin.template:

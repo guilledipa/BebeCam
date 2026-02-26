@@ -5,6 +5,20 @@
     state: present
   become: true
 
+- name: Disable conflicting wd_keepalive service
+  ansible.builtin.systemd:
+    name: wd_keepalive
+    enabled: false
+    state: stopped
+  become: true
+  failed_when: false
+
+- name: Ensure watchdog is stopped before configuration
+  ansible.builtin.systemd:
+    name: watchdog
+    state: stopped
+  become: true
+
 - name: Enable hardware watchdog (Radxa Zero 3W)
   ansible.builtin.template:
     src: watchdog.conf.j2
@@ -18,6 +32,7 @@
     name: watchdog
     enabled: true
     state: started
+    daemon_reload: true
   become: true
 
 - name: Optimize logging to RAM via tmpfs
