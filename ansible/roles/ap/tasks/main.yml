@@ -12,16 +12,43 @@
   become: true
   changed_when: true
 
+- name: Install dnsmasq for isolated DHCP
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: present
+  become: true
+
 - name: Configure Hotspot IP and Security
   community.general.nmcli:
     conn_name: "{{ ap_ssid }}"
     state: present
-    gw4: "{{ ap_ip_addr | ansible.utils.ipaddr('address') }}"
     ip4: "{{ ap_ip_addr }}"
-    method4: shared
+    method4: manual
     wifi_sec:
       key-mgmt: wpa-psk
       psk: "{{ ap_password }}"
+  become: true
+
+- name: Configure dnsmasq for AP without gateway/DNS
+  ansible.builtin.copy:
+    dest: /etc/dnsmasq.d/bebecam_ap.conf
+    content: |
+      interface={{ wifi_interface }}
+      bind-interfaces
+      # DHCP range: from .10 to .100, 24h lease
+      dhcp-range={{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.10') }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.100') }},255.255.255.0,24h
+      # Option 3 (Router/Gateway) - Empty forces no gateway
+      dhcp-option=3
+      # Option 6 (DNS) - Empty forces no DNS
+      dhcp-option=6
+  become: true
+  notify: Restart dnsmasq
+
+- name: Ensure dnsmasq is enabled
+  ansible.builtin.systemd:
+    name: dnsmasq
+    enabled: true
+    state: started
   become: true
 
 - name: Bring Hotspot up

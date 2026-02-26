@@ -78,7 +78,7 @@
       become: true
 
   roles:
-    # - role: ap
+    - role: ap
     - role: mediamtx
     - role: dashboard
     - role: hardening
