@@ -1,0 +1,14 @@
+[Unit]
+Description=BebeCam Dashboard Server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart={{ install_dir }}/bebecam
+Restart=always
+RestartSec=5
+User={{ ansible_user }}
+WorkingDirectory={{ install_dir }}
+
+[Install]
+WantedBy=multi-user.target

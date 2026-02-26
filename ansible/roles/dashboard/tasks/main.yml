@@ -52,23 +52,9 @@
   become: true
 
 - name: Create BebeCam Dashboard systemd service
-  ansible.builtin.copy:
+  ansible.builtin.template:
+    src: bebecam-dashboard.service.j2
     dest: /etc/systemd/system/bebecam-dashboard.service
-    content: |
-      [Unit]
-      Description=BebeCam Dashboard Server
-      After=network.target
-      StartLimitIntervalSec=0
-
-      [Service]
-      ExecStart={{ install_dir }}/bebecam
-      Restart=always
-      RestartSec=5
-      User={{ ansible_user }}
-      WorkingDirectory={{ install_dir }}
-
-      [Install]
-      WantedBy=multi-user.target
     mode: "0644"
   become: true
   notify: Restart dashboard

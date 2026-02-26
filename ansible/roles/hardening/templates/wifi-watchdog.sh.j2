@@ -1,0 +1,36 @@
+#!/bin/bash
+WIFI_SSID="{{ wifi_ssid }}"
+AP_SSID="{{ ap_ssid }}"
+
+while true; do
+  # Check if we are connected to the home network
+  if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$WIFI_SSID"; then
+    # We are on the home network, ensure AP is down
+    if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$AP_SSID"; then
+       nmcli con down "$AP_SSID"
+    fi
+  else
+    # Not on home network
+    # Is AP already up?
+    if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$AP_SSID"; then
+      echo "AP is running. Scanning for home network..."
+      if nmcli dev wifi list | grep -q "$WIFI_SSID"; then
+        echo "Home wifi found! Switching from AP to Home network..."
+        nmcli con down "$AP_SSID"
+        nmcli con up "$WIFI_SSID"
+        sleep 10
+      fi
+      sleep 60
+      continue
+    fi
+
+    # Neither is up. Try to connect to home wifi.
+    if nmcli con up "$WIFI_SSID" > /dev/null 2>&1; then
+      echo "Connected to home wifi."
+    else
+      echo "Home wifi not found. Starting AP."
+      nmcli con up "$AP_SSID"
+    fi
+  fi
+  sleep 30
+done

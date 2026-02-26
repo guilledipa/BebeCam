@@ -50,59 +50,16 @@
   changed_when: hardening_nmcli_result.rc == 0
 
 - name: Install simple WiFi watchdog script
-  ansible.builtin.copy:
+  ansible.builtin.template:
+    src: wifi-watchdog.sh.j2
     dest: /usr/local/bin/wifi-watchdog.sh
-    content: |
-      #!/bin/bash
-      WIFI_SSID="{{ wifi_ssid }}"
-      AP_SSID="{{ ap_ssid }}"
-
-      while true; do
-        # Check if we are connected to the home network
-        if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$WIFI_SSID"; then
-          # We are on the home network, ensure AP is down
-          if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$AP_SSID"; then
-             nmcli con down "$AP_SSID"
-          fi
-        else
-          # Not on home network
-          # Is AP already up?
-          if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$AP_SSID"; then
-            echo "AP is running. Scanning for home network..."
-            # Periodically we could bring AP down to scan, but for a car setup,
-            # turning off the car cuts power. When powered on at home, it connects to Wi-Fi.
-            # So if AP is up, we just stay in AP mode until next reboot.
-            sleep 60
-            continue
-          fi
-
-          # Neither is up. Try to connect to home wifi.
-          if nmcli con up "$WIFI_SSID" > /dev/null 2>&1; then
-            echo "Connected to home wifi."
-          else
-            echo "Home wifi not found. Starting AP."
-            nmcli con up "$AP_SSID"
-          fi
-        fi
-        sleep 30
-      done
     mode: "0755"
   become: true
 
 - name: Create WiFi watchdog systemd service
-  ansible.builtin.copy:
+  ansible.builtin.template:
+    src: wifi-watchdog.service.j2
     dest: /etc/systemd/system/wifi-watchdog.service
-    content: |
-      [Unit]
-      Description=WiFi Connectivity Watchdog
-      After=network.target
-
-      [Service]
-      ExecStart=/usr/local/bin/wifi-watchdog.sh
-      Restart=always
-
-      [Install]
-      WantedBy=multi-user.target
     mode: "0644"
   become: true
   notify: Restart wifi-watchdog
