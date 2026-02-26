@@ -41,6 +41,9 @@
       dhcp-option=3
       # Option 6 (DNS) - Empty forces no DNS
       dhcp-option=6
+    mode: "0644"
+    owner: root
+    group: root
   become: true
   notify: Restart dnsmasq
 
@@ -50,5 +53,3 @@
     enabled: true
     state: started
   become: true
-
-

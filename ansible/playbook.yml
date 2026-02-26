@@ -18,17 +18,17 @@
     mediamtx_arch: "{{ mediamtx_arch_map[ansible_architecture] | default('linux_amd64') }}"
     # Map GStreamer encoder and source based on architecture/board type
     board_type: "rpi" # can be 'rpi' or 'radxa'
-    
+
     video_source_map:
       aarch64: "v4l2src device=/dev/video0" # Radxa Zero 3W
       armv7l: "libcamerasrc ! v4l2convert ! video/x-raw,format=NV12" # Raspberry Pi (Camera Module 1.3/3)
     video_source: "{{ video_source_map[ansible_architecture] | default('v4l2src device=/dev/video0') }}"
-    
+
     video_resolution_map:
       aarch64: "width=1920,height=1080"
       armv7l: "width=1280,height=720"
     video_resolution: "{{ video_resolution_map[ansible_architecture] | default('width=1280,height=720') }}"
-    
+
     video_encoder_map:
       aarch64: "mpph264enc"
       armv7l: "v4l2h264enc"
@@ -39,7 +39,7 @@
     video_pipeline_map:
       rpi: "rpicam-vid -t 0 --nopreview --inline --width 1024 --height 768 --framerate 20 --bitrate 1500000 --intra 10 --profile baseline -o - | ffmpeg -hide_banner -loglevel error -fflags nobuffer -flags low_delay -f h264 -i pipe:0 -c copy -f rtsp rtsp://127.0.0.1:8554/bebe"
       radxa: "gst-launch-1.0 {{ video_source }},{{ video_resolution }},framerate=30 ! {{ video_encoder }} ! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/bebe"
-    
+
     video_pipeline: "{{ video_pipeline_map[board_type] | default(video_pipeline_map['rpi']) }}"
     # Map Ansible architecture to Go GOARCH
     go_arch_map:
