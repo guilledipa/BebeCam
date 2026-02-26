@@ -564,60 +564,42 @@
                 settingsPanel.addEventListener('click', e => e.stopPropagation());
 
 
-                // Pinch to Zoom Logic
-                const interactionLayer = document.getElementById('interactionLayer');
-                const videoTransformLayer = document.getElementById('videoTransform');
-
-                let currentScale = 1;
-                let currentX = 0;
-                let currentY = 0;
+                    // Pinch to Zoom Toggle Logic (Landscape Only)
+                    const interactionLayer = document.getElementById('interactionLayer');
 
                 let initialPinchDistance = null;
-                let initialScale = 1;
-
-                let initialTouchX = 0;
-                let initialTouchY = 0;
-                let initialPanX = 0;
-                let initialPanY = 0;
+                    let isZoomed = false;
 
                 function getDistance(touches) {
                     return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
                 }
 
-                function applyTransform() {
-                    videoTransformLayer.style.transform = `translate(${currentX}px, ${currentY}px) scale(${currentScale})`;
-                }
-
                 interactionLayer.addEventListener('touchstart', (e) => {
                     if (e.touches.length === 2) {
-                        // Start pincho
                         initialPinchDistance = getDistance(e.touches);
-                        initialScale = currentScale;
-                    } else if (e.touches.length === 1 && currentScale > 1) {
-                        // Start pan if zoomed in
-                        initialTouchX = e.touches[0].pageX;
-                        initialTouchY = e.touches[0].pageY;
-                        initialPanX = currentX;
-                        initialPanY = currentY;
                     }
                 });
 
                 interactionLayer.addEventListener('touchmove', (e) => {
-                    if (e.touches.length === 2) {
-                        // Zooming
+                    if (e.touches.length === 2 && initialPinchDistance) {
                         e.preventDefault();
                         const currentDistance = getDistance(e.touches);
-                        const scaleFactor = currentDistance / initialPinchDistance;
-                        currentScale = Math.min(Math.max(1, initialScale * scaleFactor), 4); // Limit zoom 1x - 4x
-                        applyTransform();
-                    } else if (e.touches.length === 1 && currentScale > 1) {
-                        // Panning
-                        e.preventDefault();
-                        const deltaX = e.touches[0].pageX - initialTouchX;
-                        const deltaY = e.touches[0].pageY - initialTouchY;
-                        currentX = initialPanX + deltaX;
-                        currentY = initialPanY + deltaY;
-                        applyTransform();
+                        const diff = currentDistance - initialPinchDistance;
+
+                        // Check orientation (landscape)
+                        if (window.innerWidth > window.innerHeight) {
+                            if (diff > 50 && !isZoomed) {
+                                isZoomed = true;
+                                iframe.style.objectFit = 'cover';
+                                hapticFeedback([20, 30]); // Snap feedback
+                                initialPinchDistance = currentDistance; // reset
+                            } else if (diff < -50 && isZoomed) {
+                                isZoomed = false;
+                                iframe.style.objectFit = 'contain';
+                                hapticFeedback([20, 30]);
+                                initialPinchDistance = currentDistance;
+                            }
+                        }
                     }
                 });
 
@@ -625,13 +607,15 @@
                     if (e.touches.length < 2) {
                         initialPinchDistance = null;
                     }
-                    // Constrain pan when zoom ends/panning ends
-                    if (currentScale === 1) {
-                        currentX = 0;
-                        currentY = 0;
-                        applyTransform();
-            }
-        });
+                });
+
+                    // Reset zoom if phone is rotated to portrait
+                    window.addEventListener('resize', () => {
+                        if (window.innerWidth <= window.innerHeight && isZoomed) {
+                            isZoomed = false;
+                            iframe.style.objectFit = 'contain';
+                        }
+                    });
 
             // Double Tap and UI Auto-Hide
         const fsText = document.getElementById('fsText');
@@ -681,7 +665,7 @@
             const currentTime = new Date().getTime();
             const tapLength = currentTime - lastTap;
 
-            if (tapLength < 400 && tapLength > 0 && currentScale === 1) { // Only allow double tap full screen if not zoomed
+                if (tapLength < 400 && tapLength > 0 && !isZoomed) { // Only allow double tap full screen if not zoomed
                 toggleFullScreen();
             } else if (e.target === interactionLayer) {
                 if (isSettingsOpen) {
