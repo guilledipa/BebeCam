@@ -592,7 +592,12 @@
                         if (window.innerWidth > window.innerHeight) {
                             if (diff > 50 && !isZoomed) {
                                 isZoomed = true;
-                                videoTransformLayer.style.transform = 'scale(1.35)';
+                                // Calculate exact scale needed for ultra-wide phones
+                                const screenRatio = window.innerWidth / window.innerHeight;
+                                const videoRatio = 4 / 3;
+                                const requiredScale = Math.max(1.35, (screenRatio / videoRatio) + 0.02);
+
+                                videoTransformLayer.style.transform = `scale(${requiredScale})`;
                                 hapticFeedback([20, 30]); // Snap feedback
                                 initialPinchDistance = currentDistance; // reset
                             } else if (diff < -50 && isZoomed) {
