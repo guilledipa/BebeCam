@@ -51,8 +51,4 @@
     state: started
   become: true
 
-- name: Bring Hotspot up
-  community.general.nmcli:
-    conn_name: "{{ ap_ssid }}"
-    state: up
-  become: true
+
