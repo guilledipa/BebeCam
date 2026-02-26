@@ -4,7 +4,7 @@
     project_root: "/home/guilledipa/Documents/Go/BebeCam"
     install_dir: "/opt/bebecam"
     ap_ssid: "BebeCam"
-    ap_password: "bebecam_pass"
+    ap_password: "bebecam"
     ap_ip_addr: "192.168.4.1/24"
     wifi_interface: "wlan0"
     mediamtx_version: "v1.9.0"
