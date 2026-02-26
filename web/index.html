@@ -2,154 +2,339 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BebeCam - Monitor de Bebé</title>
+    <!-- Use Inter font for a premium look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6366f1;
-            --background: #0f172a;
-            --surface: #1e293b;
-            --text: #f8fafc;
-            --accent: #f43f5e;
+            --bg-color: #09090b; /* Zinc 950 */
+            --surface-color: rgba(24, 24, 27, 0.7); /* Zinc 900 with opacity */
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --live-color: #ef4444; /* Red 500 */
+            --primary-btn: #3b82f6; /* Blue 500 */
+            --primary-btn-hover: #2563eb;
         }
 
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--background);
-            color: var(--text);
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden; /* Prevent scrolling on mobile */
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
+            overscroll-behavior-y: none;
         }
 
-        .header {
+        /* Top Bar - Glassmorphism */
+        .top-bar {
             position: absolute;
-            top: 2rem;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 50;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+            box-sizing: border-box;
+            pointer-events: none; /* Let clicks pass through to video if needed */
+        }
+
+        .brand {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            z-index: 10;
+            gap: 12px;
         }
 
-        .status-dot {
-            width: 12px;
-            height: 12px;
-            background-color: var(--accent);
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .brand-subtitle {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 6px 12px;
+            border-radius: 99px;
+            border: 1px solid rgba(255,255,255,0.1);
+            pointer-events: auto;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--live-color);
             border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent);
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--live-color);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        .live-text {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--live-color);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
         }
 
         @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.4; }
-            100% { opacity: 1; }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        .video-container {
-            width: 90vw;
-            max-width: 1000px;
-            aspect-ratio: 16 / 9;
-            background-color: var(--surface);
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        /* Video Container */
+        .video-wrapper {
+            flex: 1;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            width: 100%;
+            height: 100%;
         }
 
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            /* Ensure the iframe scales well */
+            object-fit: contain;
         }
 
-        .controls {
-            margin-top: 2rem;
+        /* Bottom Controls - Floating Glass Bar */
+        .controls-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            gap: 1.5rem;
+            gap: 16px;
+            padding: 12px;
+            background: var(--surface-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            z-index: 50;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            width: max-content;
+            max-width: 90%;
         }
 
         .btn {
-            background-color: var(--surface);
-            color: var(--text);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 0.75rem 1.5rem;
-            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 16px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: center;
+            gap: 10px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight on mobile iOS */
         }
 
-        .btn:hover {
-            background-color: var(--primary);
-            transform: translateY(-2px);
+        .btn:active {
+            transform: scale(0.95);
+            background: rgba(255,255,255,0.1);
         }
 
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            margin: 0;
+        /* Specific buttons */
+        .btn-refresh {
+            color: #e2e8f0;
         }
 
-        .overlay {
+        .btn-fullscreen {
+            background: var(--primary-btn);
+            border-color: var(--primary-btn);
+            color: white;
+            flex-grow: 1;
+        }
+
+        .btn-fullscreen:active {
+            background: var(--primary-btn-hover);
+            border-color: var(--primary-btn-hover);
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        /* Screen lock indicator */
+        .screen-lock {
             position: absolute;
-            bottom: 1.5rem;
-            left: 1.5rem;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            padding: 0.5rem 1rem;
-            border-radius: 9999px;
-            font-size: 0.875rem;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(0,0,0,0.5);
+            padding: 4px 12px;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.5s;
             pointer-events: none;
+        }
+
+        .screen-lock.show {
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="status-dot"></div>
-        <h1>BEBECAM LIVE</h1>
+
+    <div class="top-bar">
+        <div class="brand">
+            <div class="brand-text">
+                <span class="brand-title">BebeCam</span>
+                <span class="brand-subtitle">Vista Trasera</span>
+            </div>
+        </div>
+        <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span class="live-text">Live</span>
+        </div>
     </div>
 
-    <div class="video-container">
-        <!-- MediaMTX WebRTC viewer will be embedded here -->
-        <iframe src="/bebe" allow="autoplay; fullscreen"></iframe>
-        <div class="overlay">VISTA TRASERA • EN VIVO</div>
+    <!-- Double tap on video to fullscreen -->
+    <div class="video-wrapper" id="videoWrapper">
+        <iframe id="streamFrame" src="" allow="autoplay; fullscreen; playsinline"></iframe>
     </div>
 
-    <div class="controls">
-        <button class="btn" onclick="location.reload()">
-            <span>🔄</span> Refrescar
+    <div class="controls-bar">
+        <button class="btn btn-refresh" onclick="reloadStream()" aria-label="Recargar Video">
+            <svg class="icon" viewBox="0 0 24 24">
+                <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            </svg>
         </button>
-        <button class="btn" onclick="toggleFullScreen()">
-            <span>📺</span> Pantalla Completa
+        <button class="btn btn-fullscreen" onclick="toggleFullScreen()" id="fsBtn">
+            <svg class="icon" viewBox="0 0 24 24" id="fsIcon">
+                <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>
+            </svg>
+            <span id="fsText">Pantalla Completa</span>
         </button>
     </div>
+    
+    <div class="screen-lock" id="wakeLockMsg">🔋 Pantalla siempre activa</div>
 
     <script>
+        // Setup MediaMTX iframe source securely
+        const host = window.location.hostname;
+        const iframe = document.getElementById('streamFrame');
+        iframe.src = `http://${host}:8889/bebe`;
+
+        function reloadStream() {
+            // Reload the iframe to re-establish connection without flashing the whole page
+            const currentSrc = iframe.src;
+            iframe.src = '';
+            setTimeout(() => {
+                iframe.src = currentSrc;
+            }, 100);
+        }
+
+        // Fullscreen Logic
+        const fsText = document.getElementById('fsText');
+        const fsIcon = document.getElementById('fsIcon');
+        
         function toggleFullScreen() {
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                });
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen();
                 }
             }
         }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement) {
+                fsText.textContent = "Salir";
+                fsIcon.innerHTML = '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>';
+            } else {
+                fsText.textContent = "Pantalla Completa";
+                fsIcon.innerHTML = '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
+            }
+        });
+
+        // Double tap on video area to toggle fullscreen (useful while driving)
+        let lastTap = 0;
+        document.getElementById('videoWrapper').addEventListener('touchend', function(e) {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTap;
+            if (tapLength < 500 && tapLength > 0) {
+                toggleFullScreen();
+                e.preventDefault();
+            }
+            lastTap = currentTime;
+        });
+
+        // Wake Lock API - Prevent screen from turning off while driving
+        let wakeLock = null;
         
-        // Auto-detect the IP if accessed via the AP
-        const host = window.location.hostname;
-        const iframe = document.querySelector('iframe');
-        iframe.src = `http://${host}:8889/bebe`;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    
+                    const msg = document.getElementById('wakeLockMsg');
+                    msg.classList.add('show');
+                    setTimeout(() => msg.classList.remove('show'), 3000);
+                    
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Screen Wake Lock released');
+                    });
+                }
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+
+        // Request wake lock when page is visible
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+        
+        // Initial request on user interaction (required by some browsers)
+        document.body.addEventListener('click', requestWakeLock, { once: true });
+        document.body.addEventListener('touchstart', requestWakeLock, { once: true });
     </script>
 </body>
 </html>
