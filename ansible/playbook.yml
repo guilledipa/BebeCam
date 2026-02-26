@@ -35,7 +35,7 @@
     # Full video pipeline command
     # Using explicit RTSP port 8554 because MediaMTX no longer injects $RTSP_PORT
     video_pipeline_map:
-      rpi: "rpicam-vid -t 0 --nopreview --inline --width 1024 --height 768 --framerate 20 --bitrate 1500000 --intra 10 --profile main -o - | ffmpeg -hide_banner -loglevel error -f h264 -i pipe:0 -c copy -f rtsp rtsp://127.0.0.1:8554/bebe"
+      rpi: "rpicam-vid -t 0 --nopreview --inline --width 1024 --height 768 --framerate 20 --bitrate 1500000 --intra 10 --profile baseline -o - | ffmpeg -hide_banner -loglevel error -fflags nobuffer -flags low_delay -f h264 -i pipe:0 -c copy -f rtsp rtsp://127.0.0.1:8554/bebe"
       radxa: "gst-launch-1.0 {{ video_source }},{{ video_resolution }},framerate=30 ! {{ video_encoder }} ! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/bebe"
     
     video_pipeline: "{{ video_pipeline_map[board_type] | default(video_pipeline_map['rpi']) }}"
