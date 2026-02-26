@@ -580,6 +580,8 @@
                     }
                 });
 
+                    const videoTransformLayer = document.getElementById('videoTransform');
+
                 interactionLayer.addEventListener('touchmove', (e) => {
                     if (e.touches.length === 2 && initialPinchDistance) {
                         e.preventDefault();
@@ -590,12 +592,12 @@
                         if (window.innerWidth > window.innerHeight) {
                             if (diff > 50 && !isZoomed) {
                                 isZoomed = true;
-                                iframe.style.objectFit = 'cover';
+                                videoTransformLayer.style.transform = 'scale(1.35)';
                                 hapticFeedback([20, 30]); // Snap feedback
                                 initialPinchDistance = currentDistance; // reset
                             } else if (diff < -50 && isZoomed) {
                                 isZoomed = false;
-                                iframe.style.objectFit = 'contain';
+                                videoTransformLayer.style.transform = 'scale(1)';
                                 hapticFeedback([20, 30]);
                                 initialPinchDistance = currentDistance;
                             }
@@ -613,7 +615,7 @@
                     window.addEventListener('resize', () => {
                         if (window.innerWidth <= window.innerHeight && isZoomed) {
                             isZoomed = false;
-                            iframe.style.objectFit = 'contain';
+                            videoTransformLayer.style.transform = 'scale(1)';
                         }
                     });
 
@@ -657,27 +659,19 @@
             hideTimeout = setTimeout(hideUI, 4000);
         }
 
-            let lastTap = 0;
             interactionLayer.addEventListener('touchend', function (e) {
-            if (e.changedTouches.length > 1) return; // Ignore if it was a pinch release
-            
-            // Handle double tap
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTap;
+                if (e.changedTouches.length > 1) return; // Ignore if it was a pinch release
+                
+                if (e.target === interactionLayer) {
+                    if (isSettingsOpen) {
+                        isSettingsOpen = false;
+                        settingsPanel.classList.remove('active');
+                    }
 
-                if (tapLength < 400 && tapLength > 0 && !isZoomed) { // Only allow double tap full screen if not zoomed
-                toggleFullScreen();
-            } else if (e.target === interactionLayer) {
-                if (isSettingsOpen) {
-                    isSettingsOpen = false;
-                    settingsPanel.classList.remove('active');
+                    if (isUIHidden) { wakeUI(); }
+                    else { hideUI(); }
                 }
-
-                if (isUIHidden) { wakeUI(); }
-                else { hideUI(); }
-            }
-            lastTap = currentTime;
-        });
+            });
 
             interactionLayer.addEventListener('mousemove', wakeUI);
 
