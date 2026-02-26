@@ -664,21 +664,19 @@
             hideTimeout = setTimeout(hideUI, 4000);
         }
 
-            interactionLayer.addEventListener('touchend', function (e) {
-                if (e.changedTouches.length > 1) return; // Ignore if it was a pinch release
-                
-                if (e.target === interactionLayer) {
+                interactionLayer.addEventListener('click', function (e) {
                     if (isSettingsOpen) {
                         isSettingsOpen = false;
                         settingsPanel.classList.remove('active');
-                    }
+                    return; // Just close settings, don't hide UI yet
+                }
 
-                    if (isUIHidden) { wakeUI(); }
-                    else { hideUI(); }
+                if (isUIHidden) {
+                    wakeUI();
+                } else {
+                    hideUI(); 
                 }
             });
-
-            interactionLayer.addEventListener('mousemove', wakeUI);
 
 
 
