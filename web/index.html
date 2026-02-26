@@ -256,7 +256,7 @@
         /* Settings Panel */
         .settings-panel {
             position: absolute;
-            bottom: 110px;
+            bottom: 140px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
             background: var(--glass-bg);
@@ -444,11 +444,11 @@
     <div class="settings-panel" id="settingsPanel">
         <div class="setting-row">
             <label>Brillo <span id="valBrightness">100%</span></label>
-            <input type="range" id="sliderBrightness" min="20" max="200" value="100">
+            <input type="range" id="sliderBrightness" min="20" max="200" step="10" value="100">
         </div>
         <div class="setting-row">
             <label>Contraste <span id="valContrast">100%</span></label>
-            <input type="range" id="sliderContrast" min="50" max="200" value="100">
+            <input type="range" id="sliderContrast" min="50" max="200" step="10" value="100">
         </div>
     </div>
     
@@ -558,24 +558,17 @@
                         btn.addEventListener('touchstart', () => hapticFeedback(10), { passive: true });
                     });
 
-                    function updateVideoFilters(e) {
-                        const isContrast = e.target.id === 'sliderContrast';
-                        const targetInput = e.target;
-
-                        // Snapping logic to 100%
+                            function updateVideoFilters(e) {
+                            const targetInput = e.target;
                         let val = parseInt(targetInput.value);
-                        if (val > 92 && val < 108) {
-                            if (targetInput.dataset.snapped !== "true") {
-                                // Just entered the snap zone
-                                hapticFeedback([30, 20, 30]); // Distinct click feel
-                                targetInput.dataset.snapped = "true";
-                            }
-                            val = 100;
-                            targetInput.value = 100;
+
+                            if (targetInput.dataset.lastValue != val) {
+                                targetInput.dataset.lastValue = val;
+                                if (val === 100) {
+                                    hapticFeedback([30, 20, 30]); // Distinct center snap
                         } else {
-                            targetInput.dataset.snapped = "false";
-                            // Light tick while dragging
-                            if (val % 10 === 0) hapticFeedback(5);
+                                hapticFeedback(10); // Normal step snap
+                            }
                         }
 
                     document.documentElement.style.setProperty('--video-brightness', `${sBrightness.value}%`);
