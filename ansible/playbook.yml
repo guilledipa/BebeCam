@@ -14,6 +14,15 @@
       armv7l: "linux_armv7"
       x86_64: "linux_amd64"
     mediamtx_arch: "{{ mediamtx_arch_map[ansible_architecture] | default('linux_amd64') }}"
+    # Map GStreamer encoder and source based on architecture
+    video_source_map:
+      aarch64: "v4l2src device=/dev/video0" # Radxa Zero 3W
+      armv7l: "libcamerasrc" # Raspberry Pi (Camera Module 3)
+    video_source: "{{ video_source_map[ansible_architecture] | default('v4l2src device=/dev/video0') }}"
+    video_encoder_map:
+      aarch64: "mpph264enc"
+      armv7l: "v4l2h264enc"
+    video_encoder: "{{ video_encoder_map[ansible_architecture] | default('x264enc') }}"
     # Map Ansible architecture to Go GOARCH
     go_arch_map:
       aarch64: "arm64"
@@ -37,6 +46,13 @@
     - name: Restart watchdog
       ansible.builtin.systemd:
         name: watchdog
+        state: restarted
+        daemon_reload: true
+      become: true
+
+    - name: Restart wifi-watchdog
+      ansible.builtin.systemd:
+        name: wifi-watchdog
         state: restarted
         daemon_reload: true
       become: true

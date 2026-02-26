@@ -35,6 +35,61 @@
     daemon_reload: true
   become: true
 
+- name: Ensure NetworkManager is installed
+  ansible.builtin.apt:
+    name: network-manager
+    state: present
+  become: true
+
+- name: Configure WiFi autoconnect and retries
+  ansible.builtin.command:
+    cmd: "nmcli connection modify '{{ wifi_ssid }}' connection.autoconnect yes connection.autoconnect-retries 0"
+  become: true
+  ignore_errors: true
+  register: hardening_nmcli_result
+  changed_when: hardening_nmcli_result.rc == 0
+
+- name: Install simple WiFi watchdog script
+  ansible.builtin.copy:
+    dest: /usr/local/bin/wifi-watchdog.sh
+    content: |
+      #!/bin/bash
+      while true; do
+        if ! ping -c 1 8.8.8.8 > /dev/null; then
+          echo "WiFi down, restarting..."
+          nmcli networking off && nmcli networking on
+        fi
+        sleep 60
+      done
+    mode: "0755"
+  become: true
+
+- name: Create WiFi watchdog systemd service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/wifi-watchdog.service
+    content: |
+      [Unit]
+      Description=WiFi Connectivity Watchdog
+      After=network.target
+
+      [Service]
+      ExecStart=/usr/local/bin/wifi-watchdog.sh
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  become: true
+  notify: Restart wifi-watchdog
+
+- name: Enable and start WiFi watchdog
+  ansible.builtin.systemd:
+    name: wifi-watchdog
+    enabled: true
+    state: started
+    daemon_reload: true
+  become: true
+
 - name: Optimize logging to RAM via tmpfs
   ansible.builtin.lineinfile:
     path: /etc/fstab
