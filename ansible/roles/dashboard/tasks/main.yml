@@ -32,6 +32,18 @@
   become: false
   changed_when: true
 
+- name: Stop BebeCam Dashboard before update
+  ansible.builtin.systemd:
+    name: bebecam-dashboard
+    state: stopped
+  become: true
+
+- name: Remove existing dashboard binary on target
+  ansible.builtin.file:
+    path: "{{ install_dir }}/bebecam"
+    state: absent
+  become: true
+
 - name: Copy dashboard binary to install directory
   ansible.builtin.copy:
     src: "{{ project_root }}/bebecam"
