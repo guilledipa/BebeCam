@@ -546,12 +546,45 @@
                 const vBrightness = document.getElementById('valBrightness');
                 const vContrast = document.getElementById('valContrast');
 
-                function updateVideoFilters() {
+                    // Haptic Feedback Helper
+                    function hapticFeedback(pattern = 15) {
+                        if (navigator.vibrate) {
+                            navigator.vibrate(pattern);
+                        }
+                    }
+
+                    // Add haptics to standard buttons
+                    document.querySelectorAll('.btn, .btn-icon-only').forEach(btn => {
+                        btn.addEventListener('touchstart', () => hapticFeedback(10), { passive: true });
+                    });
+
+                    function updateVideoFilters(e) {
+                        const isContrast = e.target.id === 'sliderContrast';
+                        const targetInput = e.target;
+
+                        // Snapping logic to 100%
+                        let val = parseInt(targetInput.value);
+                        if (val > 92 && val < 108) {
+                            if (targetInput.dataset.snapped !== "true") {
+                                // Just entered the snap zone
+                                hapticFeedback([30, 20, 30]); // Distinct click feel
+                                targetInput.dataset.snapped = "true";
+                            }
+                            val = 100;
+                            targetInput.value = 100;
+                        } else {
+                            targetInput.dataset.snapped = "false";
+                            // Light tick while dragging
+                            if (val % 10 === 0) hapticFeedback(5);
+                        }
+
                     document.documentElement.style.setProperty('--video-brightness', `${sBrightness.value}%`);
                     document.documentElement.style.setProperty('--video-contrast', `${sContrast.value}%`);
                     vBrightness.textContent = `${sBrightness.value}%`;
                     vContrast.textContent = `${sContrast.value}%`;
                 }
+
+    // Use both input and touchmove for fluid feedback
                 sBrightness.addEventListener('input', updateVideoFilters);
                 sContrast.addEventListener('input', updateVideoFilters);
 
