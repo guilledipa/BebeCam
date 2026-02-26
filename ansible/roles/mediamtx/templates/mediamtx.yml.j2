@@ -2,8 +2,7 @@ rtspAddress: 0.0.0.0:8554
 paths:
   bebe:
     runOnInit: >
-      gst-launch-1.0 {{ video_source }} ! video/x-raw,width=1920,height=1080,framerate=30 ! 
-      {{ video_encoder }} ! h264parse ! rtspclientsink location=rtsp://localhost:$RTSP_PORT/bebe
+      {{ video_pipeline }}
     runOnInitRestart: yes
 
 webrtc: yes
@@ -17,3 +16,9 @@ rtmp: yes
 rtmpAddress: 0.0.0.0:1935
 
 logLevel: info
+
+api: yes
+apiAddress: 0.0.0.0:9997
+
+metrics: yes
+metricsAddress: 0.0.0.0:9998
