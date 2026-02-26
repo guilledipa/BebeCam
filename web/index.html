@@ -102,24 +102,7 @@
             text-transform: uppercase;
         }
 
-        .battery-indicator {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #a7f3d0;
-            background: rgba(16, 185, 129, 0.15);
-            padding: 2px 6px;
-            border-radius: 4px;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            display: none; /* hidden until supported load */
-        }
-        .battery-indicator.warning {
-            color: #fca5a5;
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.3);
-        }
+
 
         .top-right-controls {
             display: flex;
@@ -417,13 +400,7 @@
                 <span class="brand-title">BebeCam</span>
                 <div class="brand-subtitle-container">
                     <span class="brand-subtitle">Cámara Trasera</span>
-                    <div class="battery-indicator" id="batteryInd">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M17 6H3a2 2 0 00-2 2v8a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2zm-1 8H4V10h12v4zm4-5v6h2V9h-2z" />
-                        </svg>
-                        <span id="batteryTxt">--%</span>
-                    </div>
-                    </div>
+                </div>
             </div>
             </div>
             <div class="top-right-controls">
@@ -720,24 +697,7 @@
 
             interactionLayer.addEventListener('mousemove', wakeUI);
 
-            // Battery API
-            if ('getBattery' in navigator) {
-                navigator.getBattery().then(function (battery) {
-                    const bInd = document.getElementById('batteryInd');
-                    const bTxt = document.getElementById('batteryTxt');
-                    bInd.style.display = 'flex';
 
-                    function updateBattery() {
-                        const level = Math.round(battery.level * 100);
-                        bTxt.textContent = `${level}%`;
-                        if (level <= 20 && !battery.charging) bInd.classList.add('warning');
-                        else bInd.classList.remove('warning');
-                    }
-                    updateBattery();
-                    battery.addEventListener('levelchange', updateBattery);
-                    battery.addEventListener('chargingchange', updateBattery);
-                });
-            }
 
             // Wake Lock API 
             let wakeLock = null;
