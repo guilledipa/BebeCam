@@ -2,7 +2,7 @@ rtspAddress: 0.0.0.0:8554
 paths:
   bebe:
     runOnInit: >
-      {{ video_pipeline }}
+      sh -c '{{ video_pipeline }} > /dev/null 2>&1'
     runOnInitRestart: yes
 
 webrtc: yes
