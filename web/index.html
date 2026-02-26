@@ -492,19 +492,17 @@
             async function checkConnection() {
                 if (!checkActive) return;
                 try {
-                    // Quick shallow check against the root API without disrupting iframe
-                    const res = await fetch(`http://${host}:9997/v3/paths/list`, { method: 'GET', signal: AbortSignal.timeout(3000) });
-                    if (res.ok) {
-                        liveInd.classList.remove('reconnecting');
-                        liveTxt.textContent = "EN VIVO";
-                    } else {
-                        throw new Error("HTTP Not OK");
-                    }
+                    // Quick shallow check against the stream URL itself using no-cors mode
+                    // This resolves if the server is up, and rejects if the network is down or server died
+                    await fetch(streamUrl, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
+
+                    liveInd.classList.remove('reconnecting');
+                    liveTxt.textContent = "EN VIVO";
                 } catch (err) {
-                    // We lost connection to mediamtx
+                    // We lost connection
                     liveInd.classList.add('reconnecting');
                     liveTxt.textContent = "CONECTANDO...";
-                    // Try to forcefully reload the iframe
+
                     console.log("Connection lost, auto-reloading...");
                     iframe.src = '';
                     setTimeout(() => { iframe.src = streamUrl; }, 1000);
