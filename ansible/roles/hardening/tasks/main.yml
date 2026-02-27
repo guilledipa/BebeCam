@@ -12,12 +12,7 @@
     state: stopped
   become: true
   failed_when: false
-
-- name: Ensure watchdog is stopped before configuration
-  ansible.builtin.systemd:
-    name: watchdog
-    state: stopped
-  become: true
+  changed_when: false
 
 - name: Enable hardware watchdog (Radxa Zero 3W)
   ansible.builtin.template:
@@ -46,8 +41,7 @@
     cmd: "nmcli connection modify '{{ wifi_ssid }}' connection.autoconnect yes connection.autoconnect-retries 0"
   become: true
   ignore_errors: true
-  register: hardening_nmcli_result
-  changed_when: hardening_nmcli_result.rc == 0
+  changed_when: false
 
 - name: Ensure legacy wifi-watchdog is stopped and disabled
   ansible.builtin.systemd:

@@ -48,5 +48,21 @@
       channel: 6
     wifi_sec:
       key-mgmt: wpa-psk
+      proto: rsn
+      pairwise: ccmp
+      group: ccmp
       psk: "{{ ap_password }}"
+  become: true
+
+- name: Force disable Protected Management Frames (PMF) on AP for Android Pixel compatibility
+  ansible.builtin.command:
+    cmd: "nmcli connection modify '{{ ap_ssid }}' wifi-sec.pmf 1"
+  become: true
+  ignore_errors: true
+  changed_when: false
+
+- name: Reload NetworkManager to apply PMF changes
+  ansible.builtin.systemd:
+    name: NetworkManager
+    state: reloaded
   become: true
