@@ -1,26 +1,11 @@
 ---
-- name: Check if Wi-Fi connection exists
-  ansible.builtin.command: nmcli con show "{{ ap_ssid }}"
-  register: ap_wifi_con_check
-  failed_when: false
-  changed_when: false
-
-- name: Create Wi-Fi Hotspot connection (Workaround for nmcli module bug)
-  ansible.builtin.command: >
-    nmcli con add type wifi ifname "{{ wifi_interface }}" mode ap con-name "{{ ap_ssid }}" ssid "{{ ap_ssid }}"
-  when: ap_wifi_con_check.rc != 0
-  become: true
-  changed_when: true
-
-- name: Install dnsmasq for isolated DHCP
-  ansible.builtin.apt:
-    name: dnsmasq
-    state: present
-  become: true
-
-- name: Configure Hotspot IP and Security
+- name: Configure Wi-Fi Hotspot (AP)
   community.general.nmcli:
+    type: wifi
     conn_name: "{{ ap_ssid }}"
+    ifname: "{{ wifi_interface }}"
+    ssid: "{{ ap_ssid }}"
+    mode: ap
     state: present
     ip4: "{{ ap_ip_addr }}"
     method4: manual
