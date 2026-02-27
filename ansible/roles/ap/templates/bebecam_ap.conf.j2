@@ -1,7 +1,12 @@
 interface={{ wifi_interface }}
+interface=eth0
 bind-interfaces
-# DHCP range: from .10 to .100, 24h lease
-dhcp-range={{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.10') }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.100') }},255.255.255.0,24h
+
+# Wi-Fi DHCP range: from .10 to .100, 24h lease
+dhcp-range={{ wifi_interface }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.10') }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.100') }},255.255.255.0,24h
+
+# Ethernet DHCP range for direct connection (192.168.5.x)
+dhcp-range=eth0,192.168.5.10,192.168.5.100,255.255.255.0,24h
 # Option 3 (Router/Gateway) - Empty forces no gateway
 dhcp-option=3
 # Option 6 (DNS) - Empty forces no DNS

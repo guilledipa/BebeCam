@@ -49,28 +49,13 @@
   register: hardening_nmcli_result
   changed_when: hardening_nmcli_result.rc == 0
 
-- name: Install simple WiFi watchdog script
-  ansible.builtin.template:
-    src: wifi-watchdog.sh.j2
-    dest: /usr/local/bin/wifi-watchdog.sh
-    mode: "0755"
-  become: true
-
-- name: Create WiFi watchdog systemd service
-  ansible.builtin.template:
-    src: wifi-watchdog.service.j2
-    dest: /etc/systemd/system/wifi-watchdog.service
-    mode: "0644"
-  become: true
-  notify: Restart wifi-watchdog
-
-- name: Enable and start WiFi watchdog
+- name: Ensure legacy wifi-watchdog is stopped and disabled
   ansible.builtin.systemd:
     name: wifi-watchdog
-    enabled: true
-    state: started
-    daemon_reload: true
+    enabled: false
+    state: stopped
   become: true
+  failed_when: false
 
 - name: Optimize logging to RAM via tmpfs
   ansible.builtin.lineinfile:

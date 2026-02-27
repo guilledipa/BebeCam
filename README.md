@@ -7,8 +7,9 @@ BebeCam es un sistema de monitoreo para bebés diseñado específicamente para s
 - **Extra Baja Latencia**: Transmisión WebRTC optimizada a milisegundos mediante la combinación de `rpicam-vid` y `ffmpeg`.
 - **Dashboard Pro (Mobile-First)**: Interfaz web oscura, con botones grandes táctiles, modo noche, pìnch-to-zoom inteligente, feedback háptico y ajustes de imagen (brillo/contraste) en vivo.
 - **Auto-Reconexión**: Lógica en el cliente web para reconectar silenciosamente el streaming ante los clásicos micro-cortes de Wi-Fi en movimiento.
-- **Red Autónoma**: La placa actúa como su propio punto de acceso Wi-Fi (BebeCam AP).
-- **Resiliencia**: Hardware Watchdog para reinicio automático ante cuelgues.
+- **Punto de Acceso Dedicado**: La placa funciona como un router Wi-Fi permanente (BebeCam AP) asegurando baja latencia y sin conflictos de red en el automóvil.
+- **Administración Plug & Play**: Servidor DHCP integrado en el puerto de red. Al conectar un cable directo por Ethernet, la placa asigna una IP automáticamente a la computadora y queda accesible en `192.168.5.1`.
+- **Resiliencia**: Hardware Watchdog para reinicio automático ante cuelgues de sistema operativo.
 - **Multi-Arquitectura**: Soporte automatizado vía Ansible para Raspberry Pi (armv7l) y Radxa Zero (aarch64).
 
 ## Arquitectura del Sistema 🏗️
@@ -45,11 +46,10 @@ El despliegue se maneja íntegramente a través de **Ansible**. El playbook conf
 cd ansible
 mkdir -p vars
 cat << 'EOF' > vars/secrets.yml
-ap_password: "bebecam_auto"
-wifi_ssid: "MI_RED_DE_CASA"
+ap_password: "superpassword"
 EOF
 ```
-*(Asegurate de cambiar `MI_RED_DE_CASA` por el nombre real de tu Wi-Fi para no perder conexión SSH en el futuro)*.
+*(Asegurate de usar una contraseña con un mínimo de 8 caracteres para no tener problemas de conexión WPA2)*.
 
 3. Edita `inventory.ini` con la IP de tu placa y ejecuta:
 ```bash
