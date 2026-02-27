@@ -1,27 +1,4 @@
 ---
-- name: Configure Wi-Fi Hotspot (AP)
-  community.general.nmcli:
-    type: wifi
-    conn_name: "{{ ap_ssid }}"
-    ifname: "{{ wifi_interface }}"
-    ssid: "{{ ap_ssid }}"
-    state: present
-    autoconnect: false
-    ip4: "{{ ap_ip_addr }}"
-    method4: manual
-    wifi:
-      mode: ap
-    wifi_sec:
-      key-mgmt: wpa-psk
-      psk: "{{ ap_password }}"
-  become: true
-
-- name: Install dnsmasq for isolated DHCP
-  ansible.builtin.apt:
-    name: dnsmasq
-    state: present
-  become: true
-
 - name: Configure Ethernet interface (eth0) for direct connections
   community.general.nmcli:
     type: ethernet
@@ -30,6 +7,12 @@
     state: present
     ip4: "192.168.5.1/24"
     method4: manual
+  become: true
+
+- name: Install dnsmasq for isolated DHCP
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: present
   become: true
 
 - name: Configure dnsmasq for AP and Ethernet without gateway/DNS
@@ -47,4 +30,21 @@
     name: dnsmasq
     enabled: true
     state: started
+  become: true
+
+- name: Configure Wi-Fi Hotspot (AP)
+  community.general.nmcli:
+    type: wifi
+    conn_name: "{{ ap_ssid }}"
+    ifname: "{{ wifi_interface }}"
+    ssid: "{{ ap_ssid }}"
+    state: present
+    autoconnect: false
+    ip4: "{{ ap_ip_addr }}"
+    method4: manual
+    wifi:
+      mode: ap
+    wifi_sec:
+      key-mgmt: wpa-psk
+      psk: "{{ ap_password }}"
   become: true
