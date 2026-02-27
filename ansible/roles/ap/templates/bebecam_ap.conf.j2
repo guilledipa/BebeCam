@@ -1,6 +1,6 @@
 interface={{ wifi_interface }}
 interface=eth0
-bind-interfaces
+bind-dynamic
 
 # Wi-Fi DHCP range: from .10 to .100, 24h lease
 dhcp-range={{ wifi_interface }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.10') }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.100') }},255.255.255.0,24h
