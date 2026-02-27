@@ -47,5 +47,8 @@
       mode: ap
     wifi_sec:
       key-mgmt: wpa-psk
+      proto: rsn
+      pairwise: ccmp
+      group: ccmp
       psk: "{{ ap_password }}"
   become: true
