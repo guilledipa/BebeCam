@@ -5,13 +5,20 @@
     conn_name: "{{ ap_ssid }}"
     ifname: "{{ wifi_interface }}"
     ssid: "{{ ap_ssid }}"
-    mode: ap
     state: present
     ip4: "{{ ap_ip_addr }}"
     method4: manual
+    wifi:
+      mode: ap
     wifi_sec:
       key-mgmt: wpa-psk
       psk: "{{ ap_password }}"
+  become: true
+
+- name: Install dnsmasq for isolated DHCP
+  ansible.builtin.apt:
+    name: dnsmasq
+    state: present
   become: true
 
 - name: Configure dnsmasq for AP without gateway/DNS
