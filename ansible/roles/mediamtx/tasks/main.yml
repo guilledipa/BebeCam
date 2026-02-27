@@ -12,7 +12,7 @@
       - libcamera-apps
       - wget
     state: present
-    update_cache: true
+    cache_valid_time: 86400
   become: true
 
 - name: Check if MediaMTX is installed
@@ -48,6 +48,20 @@
     path: "{{ install_dir }}"
     state: directory
     mode: "0755"
+  become: true
+
+- name: Ensure MediaMTX web directory exists
+  ansible.builtin.file:
+    path: "{{ install_dir }}/web"
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Deploy Dashboard HTML to MediaMTX
+  ansible.builtin.copy:
+    src: "{{ project_root }}/web/index.html"
+    dest: "{{ install_dir }}/web/index.html"
+    mode: "0644"
   become: true
 
 - name: Deploy MediaMTX configuration

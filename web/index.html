@@ -9,15 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-start: #1e1b4b; /* Deep Indigo */
-            --bg-end: #0f172a; /* Slate 900 */
+            --bg-start: #1e1b4b;
+            /* Deep Indigo */
+            --bg-end: #0f172a;
+            /* Slate 900 */
             --glass-bg: rgba(30, 41, 59, 0.4);
             --glass-border: rgba(255, 255, 255, 0.15);
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
-            --live-glow: #f43f5e; /* Rose 500 */
-            --btn-gradient-1: #2563eb; /* Blue 600 */
-            --btn-gradient-2: #0284c7; /* Light Blue 600 */
+            --live-glow: #f43f5e;
+            /* Rose 500 */
+            --btn-gradient-1: #2563eb;
+            /* Blue 600 */
+            --btn-gradient-2: #0284c7;
+            /* Light Blue 600 */
             /* Default video filters */
             --video-brightness: 100%;
             --video-contrast: 100%;
@@ -53,8 +58,13 @@
             pointer-events: none !important;
         }
 
-        .ui-hidden.top-bar { transform: translateY(-20px); }
-        .ui-hidden.controls-container { transform: translateY(20px) scale(0.95); }
+        .ui-hidden.top-bar {
+            transform: translateY(-20px);
+        }
+
+        .ui-hidden.controls-container {
+            transform: translateY(20px) scale(0.95);
+        }
 
         /* Top Bar */
         .top-bar {
@@ -75,7 +85,10 @@
             gap: 12px;
         }
 
-        .brand-text { display: flex; flex-direction: column; }
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
 
         .brand-title {
             font-size: 1.5rem;
@@ -125,7 +138,11 @@
             backdrop-filter: blur(8px);
             transition: all 0.2s;
         }
-        .btn-icon-only:active { transform: scale(0.9); }
+
+        .btn-icon-only:active {
+            transform: scale(0.9);
+        }
+
         .btn-icon-only.active {
             background: rgba(250, 204, 21, 0.2);
             border-color: rgba(250, 204, 21, 0.5);
@@ -146,17 +163,19 @@
             box-shadow: 0 8px 16px -4px rgba(244, 63, 94, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.1);
             transition: all 0.3s;
         }
-        
+
         .live-indicator.reconnecting {
             background: rgba(250, 204, 21, 0.15);
             border-color: rgba(250, 204, 21, 0.3);
             box-shadow: none;
         }
+
         .live-indicator.reconnecting .live-dot {
             background-color: #facc15;
             box-shadow: 0 0 10px #facc15;
             animation: none;
         }
+
         .live-indicator.reconnecting .live-text {
             color: #fef08a;
             text-shadow: none;
@@ -181,20 +200,33 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.85); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
         }
 
         /* Video Container */
         .video-wrapper {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             background-color: #000;
             z-index: 10;
-            overflow: hidden; /* For zooming */
+            overflow: hidden;
+            /* For zooming */
         }
 
         .video-transform-layer {
@@ -204,10 +236,11 @@
             align-items: center;
             justify-content: center;
             transform-origin: center center;
-            transition: transform 0.1s ease-out; /* smooth snapping during pinch */
+            transition: transform 0.1s ease-out;
+            /* smooth snapping during pinch */
         }
 
-        iframe {
+        video {
             width: 100%;
             height: 100%;
             border: none;
@@ -220,21 +253,31 @@
         /* Night Mode Overlay */
         .night-overlay {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background-color: rgba(0, 0, 0, 0.75);
             z-index: 20;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
-        .night-overlay.active { opacity: 1; }
+
+        .night-overlay.active {
+            opacity: 1;
+        }
 
         /* Interactive layer */
         .interaction-layer {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             z-index: 40;
-            touch-action: none; /* Crucial for custom Pinch to Zoom */
+            touch-action: none;
+            /* Crucial for custom Pinch to Zoom */
         }
 
         /* Settings Panel */
@@ -259,6 +302,7 @@
             flex-direction: column;
             gap: 16px;
         }
+
         .settings-panel.active {
             opacity: 1;
             pointer-events: auto;
@@ -270,6 +314,7 @@
             flex-direction: column;
             gap: 8px;
         }
+
         .setting-row label {
             font-size: 0.85rem;
             font-weight: 700;
@@ -287,7 +332,11 @@
             width: 100%;
             background: transparent;
         }
-        input[type=range]:focus { outline: none; }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 8px;
@@ -295,6 +344,7 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
         }
+
         input[type=range]::-webkit-slider-thumb {
             height: 20px;
             width: 20px;
@@ -303,7 +353,7 @@
             cursor: pointer;
             -webkit-appearance: none;
             margin-top: -6px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         /* Bottom Controls */
@@ -348,10 +398,20 @@
             letter-spacing: 0.02em;
         }
 
-        .btn:active { transform: scale(0.92); }
+        .btn:active {
+            transform: scale(0.92);
+        }
 
-        .btn-settings { color: #cbd5e1; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-refresh { color: #f8fafc; border: 1px solid rgba(255,255,255,0.1); }
+        .btn-settings {
+            color: #cbd5e1;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-refresh {
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
         .btn-fullscreen {
             background: linear-gradient(135deg, var(--btn-gradient-1), var(--btn-gradient-2));
@@ -385,13 +445,13 @@
 
     <div class="video-wrapper" id="videoWrapper">
         <div class="video-transform-layer" id="videoTransform">
-            <iframe id="streamFrame" src="" allow="autoplay; fullscreen; playsinline"></iframe>
-            </div>
+            <video id="videoElement" autoplay playsinline muted></video>
+        </div>
     </div>
 
     <!-- Night mode dim layer -->
     <div class="night-overlay" id="nightOverlay"></div>
-    
+
     <!-- Invisible layer to catch taps and pinches -->
     <div class="interaction-layer" id="interactionLayer"></div>
 
@@ -404,18 +464,18 @@
                     <span class="brand-subtitle">Cámara Trasera</span>
                 </div>
             </div>
-            </div>
-            <div class="top-right-controls">
-                <button class="btn-icon-only" id="nightModeBtn" aria-label="Modo Noche en Ruta">
-                    <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
-                        <path
-                            d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
-                    </svg>
-                </button>
-                <div class="live-indicator" id="liveInd">
-                    <div class="live-dot"></div>
+        </div>
+        <div class="top-right-controls">
+            <button class="btn-icon-only" id="nightModeBtn" aria-label="Modo Noche en Ruta">
+                <svg class="icon" viewBox="0 0 24 24" style="width: 20px; height: 20px;">
+                    <path
+                        d="M12 3a9 9 0 109 9c0-.46-.04-.92-.1-1.36a5.389 5.389 0 01-4.4 2.26 5.403 5.403 0 01-3.14-9.8c-.44-.06-.9-.1-1.36-.1z" />
+                </svg>
+            </button>
+            <div class="live-indicator" id="liveInd">
+                <div class="live-dot"></div>
                 <span class="live-text" id="liveTxt">En Vivo</span>
-                </div>
+            </div>
         </div>
     </div>
 
@@ -430,7 +490,7 @@
             <input type="range" id="sliderContrast" min="50" max="200" step="10" value="100">
         </div>
     </div>
-    
+
     <!-- Bottom Action Bar -->
     <div class="ui-layer controls-container" id="uiBottom">
         <div class="controls-bar">
@@ -446,6 +506,12 @@
                         d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
                 </svg>
             </button>
+            <button class="btn btn-settings" id="pipBtn" aria-label="Ventana Flotante (PiP)" style="display:none;">
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path
+                        d="M19 7h-8v6h8V7zm2-4H3c-1.1 0-2 .9-2 2v14c0 1.1.9 1.98 2 1.98h18c1.1 0 2-.88 2-1.98V5c0-1.1-.9-2-2-2zm0 16.01H3V4.98h18v14.03z" />
+                </svg>
+            </button>
             <button class="btn btn-fullscreen" onclick="toggleFullScreen()" id="fsBtn">
                 <svg class="icon" viewBox="0 0 24 24" id="fsIcon">
                     <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
@@ -458,175 +524,241 @@
 
     <script>
         const host = window.location.hostname;
-        const iframe = document.getElementById('streamFrame');
-            const port = 8889;
-            const streamUrl = `http://${host}:${port}/bebe`;
-            iframe.src = streamUrl;
+        const videoElement = document.getElementById('videoElement');
+        const whepUrl = `/bebe/whep`;
 
-            // Auto-Reconnect Logic
-            const liveInd = document.getElementById('liveInd');
-            const liveTxt = document.getElementById('liveTxt');
-            let checkActive = true;
+        let peerConnection = null;
 
-            async function checkConnection() {
-                if (!checkActive) return;
+        async function startWebRTC() {
+            if (peerConnection) {
+                peerConnection.close();
+            }
+
+            peerConnection = new RTCPeerConnection();
+            peerConnection.addTransceiver('video', { direction: 'recvonly' });
+
+            peerConnection.ontrack = (event) => {
+                if (videoElement.srcObject !== event.streams[0]) {
+                    videoElement.srcObject = event.streams[0];
+                    videoElement.play().catch(err => console.error("Auto-play blocked:", err));
+                }
+            };
+
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+
+                const response = await fetch(whepUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/sdp' },
+                    body: offer.sdp
+                });
+
+                if (!response.ok) throw new Error("WHEP POST failed");
+
+                const answerSdp = await response.text();
+                await peerConnection.setRemoteDescription({
+                    type: 'answer',
+                    sdp: answerSdp
+                });
+            } catch (err) {
+                console.error("WebRTC connection failed", err);
+            }
+        }
+
+        startWebRTC();
+
+        // Auto-Reconnect Logic
+        const liveInd = document.getElementById('liveInd');
+        const liveTxt = document.getElementById('liveTxt');
+        let checkActive = true;
+
+        async function checkConnection() {
+            if (!checkActive || !peerConnection) return;
+            if (peerConnection.connectionState === 'failed' || peerConnection.connectionState === 'disconnected' || peerConnection.connectionState === 'closed') {
+                liveInd.classList.add('reconnecting');
+                liveTxt.textContent = "CONECTANDO...";
+                console.log("Connection lost, auto-reloading...");
+                startWebRTC();
+            } else {
                 try {
-                    // Quick shallow check against the stream URL itself using no-cors mode
-                    // This resolves if the server is up, and rejects if the network is down or server died
-                    await fetch(streamUrl, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
-
+                    await fetch(`/`, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
                     liveInd.classList.remove('reconnecting');
                     liveTxt.textContent = "EN VIVO";
                 } catch (err) {
-                    // We lost connection
                     liveInd.classList.add('reconnecting');
                     liveTxt.textContent = "CONECTANDO...";
-
-                    console.log("Connection lost, auto-reloading...");
-                    iframe.src = '';
-                    setTimeout(() => { iframe.src = streamUrl; }, 1000);
+                    console.log("Server unreachable, reconnecting...");
+                    startWebRTC();
                 }
             }
-            setInterval(checkConnection, 5000); // Check every 5s
+        }
+        setInterval(checkConnection, 5000);
 
-            function reloadStream() {
-            const currentSrc = iframe.src;
-            iframe.src = '';
-            setTimeout(() => { iframe.src = currentSrc; }, 50);
-                    wakeUI();
+        function reloadStream() {
+            startWebRTC();
+            wakeUI();
+        }
+
+        // Picture In Picture Configuration
+        const pipBtn = document.getElementById('pipBtn');
+        if (document.pictureInPictureEnabled) {
+            pipBtn.style.display = 'flex';
+        }
+
+        pipBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            try {
+                if (videoElement !== document.pictureInPictureElement) {
+                    await videoElement.requestPictureInPicture();
+                } else {
+                    await document.exitPictureInPicture();
                 }
+            } catch (error) {
+                console.error("PiP failed", error);
+            }
+            wakeUI();
+        });
 
-                // Night Mode
-                const nightModeBtn = document.getElementById('nightModeBtn');
-                const nightOverlay = document.getElementById('nightOverlay');
-                let isNightMode = false;
-                nightModeBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    isNightMode = !isNightMode;
-                    nightOverlay.classList.toggle('active');
-                    nightModeBtn.classList.toggle('active');
-                });
+        videoElement.addEventListener('enterpictureinpicture', () => {
+            pipBtn.classList.add('active');
+        });
 
-                // Settings Sliders
-                const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
-                const settingsPanel = document.getElementById('settingsPanel');
-                let isSettingsOpen = false;
+        videoElement.addEventListener('leavepictureinpicture', () => {
+            pipBtn.classList.remove('active');
+        });
 
-                toggleSettingsBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    isSettingsOpen = !isSettingsOpen;
-                    settingsPanel.classList.toggle('active');
-            wakeUI(); 
+        // Night Mode
+        const nightModeBtn = document.getElementById('nightModeBtn');
+        const nightOverlay = document.getElementById('nightOverlay');
+        let isNightMode = false;
+        nightModeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isNightMode = !isNightMode;
+            nightOverlay.classList.toggle('active');
+            nightModeBtn.classList.toggle('active');
+        });
+
+        // Settings Sliders
+        const toggleSettingsBtn = document.getElementById('toggleSettingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        let isSettingsOpen = false;
+
+        toggleSettingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isSettingsOpen = !isSettingsOpen;
+            settingsPanel.classList.toggle('active');
+            wakeUI();
             if (isSettingsOpen) clearTimeout(hideTimeout); // keep UI open while settings open
         });
 
-                const sBrightness = document.getElementById('sliderBrightness');
-                const sContrast = document.getElementById('sliderContrast');
-                const vBrightness = document.getElementById('valBrightness');
-                const vContrast = document.getElementById('valContrast');
+        const sBrightness = document.getElementById('sliderBrightness');
+        const sContrast = document.getElementById('sliderContrast');
+        const vBrightness = document.getElementById('valBrightness');
+        const vContrast = document.getElementById('valContrast');
 
-                    // Haptic Feedback Helper
-                    function hapticFeedback(pattern = 15) {
-                        if (navigator.vibrate) {
-                            navigator.vibrate(pattern);
-                        }
-                    }
+        // Haptic Feedback Helper
+        function hapticFeedback(pattern = 15) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
 
-                    // Add haptics to standard buttons
-                    document.querySelectorAll('.btn, .btn-icon-only').forEach(btn => {
-                        btn.addEventListener('touchstart', () => hapticFeedback(10), { passive: true });
-                    });
+        // Add haptics to standard buttons
+        document.querySelectorAll('.btn, .btn-icon-only').forEach(btn => {
+            btn.addEventListener('touchstart', () => hapticFeedback(10), { passive: true });
+        });
 
-                            function updateVideoFilters(e) {
-                            const targetInput = e.target;
-                        let val = parseInt(targetInput.value);
+        function updateVideoFilters(e) {
+            const targetInput = e.target;
+            let val = parseInt(targetInput.value);
 
-                            if (targetInput.dataset.lastValue != val) {
-                                targetInput.dataset.lastValue = val;
-                                if (val === 100) {
-                                    hapticFeedback([30, 20, 30]); // Distinct center snap
-                        } else {
-                                hapticFeedback(10); // Normal step snap
-                            }
-                        }
-
-                    document.documentElement.style.setProperty('--video-brightness', `${sBrightness.value}%`);
-                    document.documentElement.style.setProperty('--video-contrast', `${sContrast.value}%`);
-                    vBrightness.textContent = `${sBrightness.value}%`;
-                    vContrast.textContent = `${sContrast.value}%`;
+            if (targetInput.dataset.lastValue != val) {
+                targetInput.dataset.lastValue = val;
+                if (val === 100) {
+                    hapticFeedback([30, 20, 30]); // Distinct center snap
+                } else {
+                    hapticFeedback(10); // Normal step snap
                 }
+            }
 
-    // Use both input and touchmove for fluid feedback
-                sBrightness.addEventListener('input', updateVideoFilters);
-                sContrast.addEventListener('input', updateVideoFilters);
+            document.documentElement.style.setProperty('--video-brightness', `${sBrightness.value}%`);
+            document.documentElement.style.setProperty('--video-contrast', `${sContrast.value}%`);
+            vBrightness.textContent = `${sBrightness.value}%`;
+            vContrast.textContent = `${sContrast.value}%`;
+        }
 
-                // Prevent events on settings panel from bubbling to the interactive layer
-                settingsPanel.addEventListener('touchstart', e => e.stopPropagation());
-                settingsPanel.addEventListener('touchmove', e => e.stopPropagation());
-                settingsPanel.addEventListener('click', e => e.stopPropagation());
+        // Use both input and touchmove for fluid feedback
+        sBrightness.addEventListener('input', updateVideoFilters);
+        sContrast.addEventListener('input', updateVideoFilters);
+
+        // Prevent events on settings panel from bubbling to the interactive layer
+        settingsPanel.addEventListener('touchstart', e => e.stopPropagation());
+        settingsPanel.addEventListener('touchmove', e => e.stopPropagation());
+        settingsPanel.addEventListener('click', e => e.stopPropagation());
 
 
-                    // Pinch to Zoom Toggle Logic (Landscape Only)
-                    const interactionLayer = document.getElementById('interactionLayer');
+        // Pinch to Zoom Toggle Logic (Landscape Only)
+        const interactionLayer = document.getElementById('interactionLayer');
 
-                let initialPinchDistance = null;
-                    let isZoomed = false;
+        let initialPinchDistance = null;
+        let isZoomed = false;
 
-                function getDistance(touches) {
-                    return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+        function getDistance(touches) {
+            return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
+        }
+
+        interactionLayer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                initialPinchDistance = getDistance(e.touches);
+            }
+        });
+
+        const videoTransformLayer = document.getElementById('videoTransform');
+
+        interactionLayer.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && initialPinchDistance) {
+                e.preventDefault();
+                const currentDistance = getDistance(e.touches);
+                const diff = currentDistance - initialPinchDistance;
+
+                // Check orientation (landscape)
+                if (window.innerWidth > window.innerHeight) {
+                    if (diff > 50 && !isZoomed) {
+                        isZoomed = true;
+                        // Calculate exact scale needed for ultra-wide phones
+                        const screenRatio = window.innerWidth / window.innerHeight;
+                        const videoRatio = 4 / 3;
+                        const requiredScale = Math.max(1.35, (screenRatio / videoRatio) + 0.02);
+
+                        videoTransformLayer.style.transform = `scale(${requiredScale})`;
+                        hapticFeedback([20, 30]); // Snap feedback
+                        initialPinchDistance = currentDistance; // reset
+                    } else if (diff < -50 && isZoomed) {
+                        isZoomed = false;
+                        videoTransformLayer.style.transform = 'scale(1)';
+                        hapticFeedback([20, 30]);
+                        initialPinchDistance = currentDistance;
+                    }
                 }
+            }
+        });
 
-                interactionLayer.addEventListener('touchstart', (e) => {
-                    if (e.touches.length === 2) {
-                        initialPinchDistance = getDistance(e.touches);
-                    }
-                });
+        interactionLayer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                initialPinchDistance = null;
+            }
+        });
 
-                    const videoTransformLayer = document.getElementById('videoTransform');
+        // Reset zoom if phone is rotated to portrait
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= window.innerHeight && isZoomed) {
+                isZoomed = false;
+                videoTransformLayer.style.transform = 'scale(1)';
+            }
+        });
 
-                interactionLayer.addEventListener('touchmove', (e) => {
-                    if (e.touches.length === 2 && initialPinchDistance) {
-                        e.preventDefault();
-                        const currentDistance = getDistance(e.touches);
-                        const diff = currentDistance - initialPinchDistance;
-
-                        // Check orientation (landscape)
-                        if (window.innerWidth > window.innerHeight) {
-                            if (diff > 50 && !isZoomed) {
-                                isZoomed = true;
-                                // Calculate exact scale needed for ultra-wide phones
-                                const screenRatio = window.innerWidth / window.innerHeight;
-                                const videoRatio = 4 / 3;
-                                const requiredScale = Math.max(1.35, (screenRatio / videoRatio) + 0.02);
-
-                                videoTransformLayer.style.transform = `scale(${requiredScale})`;
-                                hapticFeedback([20, 30]); // Snap feedback
-                                initialPinchDistance = currentDistance; // reset
-                            } else if (diff < -50 && isZoomed) {
-                                isZoomed = false;
-                                videoTransformLayer.style.transform = 'scale(1)';
-                                hapticFeedback([20, 30]);
-                                initialPinchDistance = currentDistance;
-                            }
-                        }
-                    }
-                });
-
-                interactionLayer.addEventListener('touchend', (e) => {
-                    if (e.touches.length < 2) {
-                        initialPinchDistance = null;
-                    }
-                });
-
-                    // Reset zoom if phone is rotated to portrait
-                    window.addEventListener('resize', () => {
-                        if (window.innerWidth <= window.innerHeight && isZoomed) {
-                            isZoomed = false;
-                            videoTransformLayer.style.transform = 'scale(1)';
-                        }
-                    });
-
-            // Double Tap and UI Auto-Hide
+        // Double Tap and UI Auto-Hide
         const fsText = document.getElementById('fsText');
         const fsIcon = document.getElementById('fsIcon');
 
@@ -649,41 +781,41 @@
             }
         });
 
-            let hideTimeout;
-            const uiElements = [document.getElementById('uiTop'), document.getElementById('uiBottom'), document.getElementById('uiHint')];
-            let isUIHidden = false;
+        let hideTimeout;
+        const uiElements = [document.getElementById('uiTop'), document.getElementById('uiBottom'), document.getElementById('uiHint')];
+        let isUIHidden = false;
 
-            function hideUI() {
+        function hideUI() {
             if (isSettingsOpen) return; // Don't auto-hide if settings are open
             uiElements.forEach(el => el.classList.add('ui-hidden'));
             isUIHidden = true;
         }
 
-            function wakeUI() {
-                uiElements.forEach(el => el.classList.remove('ui-hidden'));
-                isUIHidden = false;
+        function wakeUI() {
+            uiElements.forEach(el => el.classList.remove('ui-hidden'));
+            isUIHidden = false;
             clearTimeout(hideTimeout);
             hideTimeout = setTimeout(hideUI, 4000);
         }
 
-                interactionLayer.addEventListener('click', function (e) {
-                    if (isSettingsOpen) {
-                        isSettingsOpen = false;
-                        settingsPanel.classList.remove('active');
-                    return; // Just close settings, don't hide UI yet
-                }
+        interactionLayer.addEventListener('click', function (e) {
+            if (isSettingsOpen) {
+                isSettingsOpen = false;
+                settingsPanel.classList.remove('active');
+                return; // Just close settings, don't hide UI yet
+            }
 
-                if (isUIHidden) {
-                    wakeUI();
-                } else {
-                    hideUI(); 
-                }
-            });
+            if (isUIHidden) {
+                wakeUI();
+            } else {
+                hideUI();
+            }
+        });
 
 
 
-            // Wake Lock API 
-            let wakeLock = null;
+        // Wake Lock API 
+        let wakeLock = null;
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
@@ -698,9 +830,9 @@
             if (checkActive) checkConnection();
         });
 
-    wakeUI();
+        wakeUI();
         document.body.addEventListener('touchstart', requestWakeLock, { once: true });
-            document.body.addEventListener('click', requestWakeLock, { once: true });
+        document.body.addEventListener('click', requestWakeLock, { once: true });
     </script>
 </body>
 

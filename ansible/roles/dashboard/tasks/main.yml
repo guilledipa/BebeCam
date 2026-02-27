@@ -21,6 +21,7 @@
     GOARCH: "{{ go_arch }}"
   args:
     chdir: "{{ project_root }}"
+    creates: "{{ project_root }}/bebecam"
   delegate_to: localhost
   become: false
   changed_when: false
