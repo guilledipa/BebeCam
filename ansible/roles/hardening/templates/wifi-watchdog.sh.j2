@@ -13,9 +13,9 @@ while true; do
     # Not on home network
     # Is AP already up?
     if nmcli -t -f active,ssid dev wifi | grep -q "^yes:$AP_SSID"; then
-      echo "AP is running. Scanning for home network..."
+      echo "AP is running. Scanning for home network in background..."
       if nmcli dev wifi list | grep -q "$WIFI_SSID"; then
-        echo "Home wifi found! Switching from AP to Home network..."
+        echo "Home wifi found! Joining Home network..."
         nmcli con down "$AP_SSID"
         nmcli con up "$WIFI_SSID"
         sleep 10
