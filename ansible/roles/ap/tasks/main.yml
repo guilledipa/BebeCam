@@ -1,13 +1,12 @@
 ---
-- name: Configure Ethernet interface (eth0) for direct connections
+- name: Configure Ethernet interface (eth0) for Internet Sharing (DHCP client)
   community.general.nmcli:
     type: ethernet
     conn_name: "DirectEthernet"
     ifname: "eth0"
     state: up
     autoconnect: true
-    ip4: "192.168.5.1/24"
-    method4: manual
+    method4: auto
   become: true
 
 - name: Install dnsmasq for isolated DHCP
@@ -16,7 +15,7 @@
     state: present
   become: true
 
-- name: Configure dnsmasq for AP and Ethernet without gateway/DNS
+- name: Configure dnsmasq for AP without gateway/DNS
   ansible.builtin.template:
     src: bebecam_ap.conf.j2
     dest: /etc/dnsmasq.d/bebecam_ap.conf
@@ -45,10 +44,9 @@
     method4: manual
     wifi:
       mode: ap
+      band: bg
+      channel: 6
     wifi_sec:
       key-mgmt: wpa-psk
-      proto: rsn
-      pairwise: ccmp
-      group: ccmp
       psk: "{{ ap_password }}"
   become: true

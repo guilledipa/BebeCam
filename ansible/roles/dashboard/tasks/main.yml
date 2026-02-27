@@ -14,13 +14,6 @@
     mode: "0644"
   become: true
 
-- name: Remove stale dashboard binary
-  ansible.builtin.file:
-    path: "{{ project_root }}/bebecam"
-    state: absent
-  delegate_to: localhost
-  become: false
-
 - name: Build Go dashboard binary locally
   ansible.builtin.command: go build -o bebecam main.go
   environment:
@@ -30,19 +23,7 @@
     chdir: "{{ project_root }}"
   delegate_to: localhost
   become: false
-  changed_when: true
-
-- name: Stop BebeCam Dashboard before update
-  ansible.builtin.systemd:
-    name: bebecam-dashboard
-    state: stopped
-  become: true
-
-- name: Remove existing dashboard binary on target
-  ansible.builtin.file:
-    path: "{{ install_dir }}/bebecam"
-    state: absent
-  become: true
+  changed_when: false
 
 - name: Copy dashboard binary to install directory
   ansible.builtin.copy:
@@ -50,6 +31,7 @@
     dest: "{{ install_dir }}/bebecam"
     mode: "0755"
   become: true
+  notify: Restart dashboard
 
 - name: Create BebeCam Dashboard systemd service
   ansible.builtin.template:
