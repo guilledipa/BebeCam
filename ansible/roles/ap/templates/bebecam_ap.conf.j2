@@ -3,7 +3,7 @@ bind-dynamic
 
 # Wi-Fi DHCP range: from .10 to .100, 24h lease
 dhcp-range={{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.10') }},{{ ap_ip_addr | regex_replace('\.[0-9]+/[0-9]+$', '.100') }},255.255.255.0,24h
-# Option 3 (Router/Gateway) - Empty forces no gateway
-dhcp-option=3
-# Option 6 (DNS) - Empty forces no DNS
-dhcp-option=6
+# Option 3 (Router/Gateway) - Set to the Pi to satisfy Android's strict DHCP requirements
+dhcp-option=3,{{ ap_ip_addr | regex_replace('/[0-9]+$', '') }}
+# Option 6 (DNS) - Set to the Pi to satisfy Android's strict DHCP requirements
+dhcp-option=6,{{ ap_ip_addr | regex_replace('/[0-9]+$', '') }}

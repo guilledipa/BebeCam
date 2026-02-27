@@ -44,24 +44,19 @@
     method4: manual
     wifi:
       mode: ap
-      band: bg
-      channel: 6
     wifi_sec:
       key-mgmt: wpa-psk
-      proto: rsn
-      pairwise: ccmp
-      group: ccmp
       psk: "{{ ap_password }}"
   become: true
 
-- name: Force disable Protected Management Frames (PMF) on AP for Android Pixel compatibility
+- name: Force explicit 2.4GHz band, Channel 6, disable IPv6, and disable PMF to fix Android connection bug
   ansible.builtin.command:
-    cmd: "nmcli connection modify '{{ ap_ssid }}' wifi-sec.pmf 1"
+    cmd: "nmcli connection modify '{{ ap_ssid }}' 802-11-wireless.band bg 802-11-wireless.channel 6 ipv6.method disabled wifi-sec.proto rsn wifi-sec.pairwise ccmp wifi-sec.group ccmp wifi-sec.pmf 1"
   become: true
   ignore_errors: true
   changed_when: false
 
-- name: Reload NetworkManager to apply PMF changes
+- name: Reload NetworkManager to apply band and IPv6 fixes
   ansible.builtin.systemd:
     name: NetworkManager
     state: reloaded

@@ -30,26 +30,20 @@
     daemon_reload: true
   become: true
 
-- name: Ensure NetworkManager is installed
-  ansible.builtin.apt:
-    name: network-manager
-    state: present
-  become: true
-
-- name: Configure WiFi autoconnect and retries
-  ansible.builtin.command:
-    cmd: "nmcli connection modify '{{ wifi_ssid }}' connection.autoconnect yes connection.autoconnect-retries 0"
-  become: true
-  ignore_errors: true
-  changed_when: false
-
 - name: Ensure legacy wifi-watchdog is stopped and disabled
   ansible.builtin.systemd:
     name: wifi-watchdog
     enabled: false
     state: stopped
   become: true
-  failed_when: false
+
+- name: Disable power management and hardware crypto for rtl8192cu Wi-Fi driver to ensure AP stability
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/rtl8192cu.conf
+    content: "options rtl8192cu rtw_power_mgnt=0 rtw_enusbss=0 swenc=1\n"
+    mode: "0644"
+  become: true
+  notify: Reboot system
 
 - name: Optimize logging to RAM via tmpfs
   ansible.builtin.lineinfile:

@@ -56,6 +56,17 @@ EOF
 ansible-playbook -i inventory.ini playbook.yml
 ```
 
+## ⚠️ Notas sobre Hardware Wi-Fi (Troubleshooting)
+
+Si utilizas dongles Wi-Fi USB antiguos (como los basados en el chip Edimax **RTL8188CUS / rtl8192cu**), es muy probable que los teléfonos Android modernos (como los Google Pixel) rechacen la conexión instantáneamente. Durante el desarrollo de BebeCam aislamos y solucionamos tres fallos críticos de hardware/drivers que ya hemos integrado automáticamente en Ansible:
+
+1. **Bug de Ahorro de Energía USB**: El driver entra en suspensión profunda muy rápido, causando que el *handshake* de Android falle por *timeout*. Se soluciona desactivando la gestión de energía por USB (`rtw_power_mgnt=0`).
+2. **La Trampa WPA3 (SAE)**: Las versiones modernas de `NetworkManager` anuncian soporte WPA3 (SAE) por defecto. Como estos chips viejos no tienen soporte físico para *Protected Management Frames* (PMF), el adaptador crashea silenciosamente cuando el teléfono intenta negociar seguridad avanzada. Se soluciona forzando WPA2 estricto mediante la desactivación del PMF (`wifi-sec.pmf 1` en nmcli).
+3. **Bug Físico de Encriptación AES**: El chip `rtl8192cu` *dice* soportar encriptación AES-CCMP por hardware (necesaria para WPA2), pero físicamente corrompe los paquetes de radio al encriptarlos, provocando que los dispositivos Android tiren la conexión al instante al recibir basura criptográfica. Se soluciona inyectando `swenc=1` (*Software Encryption*) al módulo del kernel de Linux, obligando a la CPU de la Raspberry Pi a calcular la criptografía AES en la RAM, bypasseando por completo el hardware roto de la antena.
+
+> [!NOTE]
+> Estos tres "parches de cirujano" (`swenc=1`, `rtw_power_mgnt=0` y `pmf=1`) ya están automatizados y viven de forma permanente dentro del playbook de Ansible en este proyecto (`roles/hardening/tasks/main.yml` y `roles/ap/tasks/main.yml`).
+
 ## Changelog v1.0 (Dashboard Pro) 📝
 
 - **[Feature]** Reescritura absoluta del Dashboard Web a un formato "Pro": Premium, Mobile-First y Modo Oscuro.
