@@ -67,6 +67,12 @@ Si utilizas dongles Wi-Fi USB antiguos (como los basados en el chip Edimax **RTL
 > [!NOTE]
 > Estos tres "parches de cirujano" (`swenc=1`, `rtw_power_mgnt=0` y `pmf=1`) ya están automatizados y viven de forma permanente dentro del playbook de Ansible en este proyecto (`roles/hardening/tasks/main.yml` y `roles/ap/tasks/main.yml`).
 
+### 4. La Limitación de Enrutamiento en Android (Navegadores Web vs 4G)
+Un comportamiento intrínseco de seguridad en el sistema operativo Android afecta el uso de "monitores de bebé" offline a través de **navegadores web (Chrome/Brave)**:
+- Si al conectarte al Wi-Fi de BebeCam rechazas mantener la conexión sin internet, Android usará tus datos 4G/5G (WhatsApp funcionará), **pero le prohibirá al navegador web acceder a la IP de la cámara (`192.168.4.1`)**.
+- Si aceptas el recuadro "Conectarse Igual / Mantener conexión", Android le permitirá a Chrome ver el video, **pero apagará agresivamente tu conexión 4G/5G para ahorrar batería**, dejándote totalmente incomunicado.
+Por este motivo exclusivo de Android (y iOS), acceder al Dashboard vía web te obliga a elegir entre ver la cámara o tener internet. La única forma de evitar este bloqueo dual a nivel sistema operativo es utilizando una **Aplicación Nativa**. Las aplicaciones nativas tienen permisos especiales (`WifiNetworkSpecifier`) para secuestrar silenciosamente el chip Wi-Fi para el video, mientras le permiten a Android mantener encendido el chip 4G para el resto del teléfono.
+
 ## Changelog v1.0 (Dashboard Pro) 📝
 
 - **[Feature]** Reescritura absoluta del Dashboard Web a un formato "Pro": Premium, Mobile-First y Modo Oscuro.
