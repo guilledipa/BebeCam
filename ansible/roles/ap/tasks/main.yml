@@ -61,3 +61,4 @@
     name: NetworkManager
     state: reloaded
   become: true
+  changed_when: false

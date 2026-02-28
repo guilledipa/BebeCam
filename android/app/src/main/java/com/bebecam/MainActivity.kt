@@ -14,17 +14,20 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import android.util.Rational
+import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
+    private lateinit var progressBar: ProgressBar
     private val logTag = "BebeCam"
     private val apSsid = "BebeCam"
     private val apPass = "bebecam_auto"
@@ -68,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         webView = findViewById(R.id.webView)
+        progressBar = findViewById(R.id.progressBar)
         setupWebView()
 
         connectivityManager = getSystemService<ConnectivityManager>()!!
@@ -76,6 +80,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun setupWebView() {
+        webView.visibility = View.INVISIBLE
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -84,6 +89,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                progressBar.visibility = View.GONE
+                webView.visibility = View.VISIBLE
+            }
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 return false
             }
