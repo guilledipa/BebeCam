@@ -8,7 +8,7 @@
 .vscode/
 
 # Compiled Go binary
-bebecam
+/bebecam
 
 # Local temporary files
 /tmp/*
