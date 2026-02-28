@@ -12,7 +12,9 @@
     <!-- Allow cleartext since BebeCam AP uses HTTP (192.168.4.1) -->
     <application
         android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="BebeCam"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.BebeCam"
         android:usesCleartextTraffic="true">
