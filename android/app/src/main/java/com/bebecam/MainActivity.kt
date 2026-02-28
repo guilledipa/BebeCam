@@ -10,8 +10,11 @@ import android.net.NetworkRequest
 import android.net.wifi.WifiNetworkSpecifier
 import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.util.Log
 import android.util.Rational
+import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -28,6 +31,54 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var connectivityManager: ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+
+    // Haptic feedback interface for the WebView
+    inner class WebAppInterface(private val context: Context) {
+        @JavascriptInterface
+        fun performHapticFeedback(effect: String) {
+            val vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) { // Use O (API 26) for one-shot with amplitude
+                val vibrationEffect = when (effect) {
+                    "tick" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
+                    } else {
+                        VibrationEffect.createOneShot(5, VibrationEffect.DEFAULT_AMPLITUDE)
+                    }
+                    "click" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                    } else {
+                         VibrationEffect.createOneShot(10, VibrationEffect.DEFAULT_AMPLITUDE)
+                    }
+                    "snap" -> VibrationEffect.createOneShot(25, 190) // A refined, single pulse. 50% between tick and old max.
+                    else -> {
+                        // Fallback for custom patterns like "20,30"
+                        val timings = effect.split(",").map { it.trim().toLong() }.toLongArray()
+                        if (timings.isNotEmpty()) {
+                            VibrationEffect.createWaveform(timings, -1)
+                        } else {
+                            null
+                        }
+                    }
+                }
+                vibrationEffect?.let { vibrator.vibrate(it) }
+            } else {
+                // Fallback for older APIs
+                @Suppress("DEPRECATION")
+                when (effect) {
+                    "tick" -> vibrator.vibrate(5)
+                    "click" -> vibrator.vibrate(10)
+                    "snap" -> vibrator.vibrate(25) // A single, medium vibration
+                    else -> {
+                        val timings = effect.split(",").map { it.trim().toLong() }.toLongArray()
+                        if (timings.isNotEmpty()) {
+                            vibrator.vibrate(timings, -1)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,6 +105,9 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         }
+
+        // Expose the haptic feedback interface to the WebView
+        webView.addJavascriptInterface(WebAppInterface(this), "Android")
     }
 
     private fun requestWifiNetwork() {
@@ -82,8 +136,9 @@ class MainActivity : AppCompatActivity() {
                     
                     // Load the Dashboard now that the native OS route is established
                     runOnUiThread {
-                        Log.d(TAG, "Loading BebeCam Dashboard: $DASHBOARD_URL")
-                        webView.loadUrl(DASHBOARD_URL)
+                        val urlWithCacheBuster = "$DASHBOARD_URL?t=" + System.currentTimeMillis()
+                        Log.d(TAG, "Loading BebeCam Dashboard: $urlWithCacheBuster")
+                        webView.loadUrl(urlWithCacheBuster)
                     }
                 }
 
@@ -98,8 +153,9 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Devices older than Android 10 do not support WifiNetworkSpecifier lockouts.
             // Just load the view immediately.
-            Log.w(TAG, "Android version too old for NetworkSpecifier, attempting simple load")
-            webView.loadUrl(DASHBOARD_URL)
+            val urlWithCacheBuster = "$DASHBOARD_URL?t=" + System.currentTimeMillis()
+            Log.w(TAG, "Android version too old for NetworkSpecifier, attempting simple load of $urlWithCacheBuster")
+            webView.loadUrl(urlWithCacheBuster)
         }
     }
 
