@@ -3,6 +3,7 @@ package com.bebecam
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.app.PictureInPictureParams
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
@@ -25,6 +26,10 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
 import androidx.core.graphics.toColorInt
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.face.FaceDetection
+import com.google.mlkit.vision.face.FaceDetector
+import com.google.mlkit.vision.face.FaceDetectorOptions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -47,6 +52,8 @@ import org.webrtc.RtpTransceiver
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
 import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoFrame
+import org.webrtc.VideoSink
 import org.webrtc.VideoTrack
 
 class MainActivity : AppCompatActivity() {
@@ -61,9 +68,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var settingsPanel: View
     private lateinit var nightOverlay: View
     private lateinit var brightnessOverlay: View
+    private lateinit var monitoringGlow: View
     private lateinit var liveIndicator: LinearLayout
     private lateinit var liveDot: View
     private lateinit var liveText: TextView
+    private lateinit var babyIndicator: LinearLayout
+    private lateinit var babyText: TextView
     private lateinit var btnRefresh: ImageButton
     private lateinit var btnNightMode: ImageButton
     private lateinit var btnSettings: ImageButton
@@ -89,6 +99,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var peerConnectionFactory: PeerConnectionFactory
     private var peerConnection: PeerConnection? = null
 
+    // AI Components
+    private lateinit var faceDetector: FaceDetector
+    private var isAnalyzing = false
+    private var lastAnalysisTime = 0L
+    private var sleepingFramesCount = 0
+    private val requiredSleepingFrames = 10
+
     // OkHttp Client
     private val okHttpClient = OkHttpClient()
 
@@ -105,9 +122,12 @@ class MainActivity : AppCompatActivity() {
         settingsPanel = findViewById(R.id.settingsPanel)
         nightOverlay = findViewById(R.id.nightOverlay)
         brightnessOverlay = findViewById(R.id.brightnessOverlay)
+        monitoringGlow = findViewById(R.id.monitoringGlow)
         liveIndicator = findViewById(R.id.liveIndicator)
         liveDot = findViewById(R.id.liveDot)
         liveText = findViewById(R.id.liveText)
+        babyIndicator = findViewById(R.id.babyIndicator)
+        babyText = findViewById(R.id.babyText)
         btnRefresh = findViewById(R.id.btnRefresh)
         btnNightMode = findViewById(R.id.btnNightMode)
         btnSettings = findViewById(R.id.btnSettings)
@@ -116,6 +136,7 @@ class MainActivity : AppCompatActivity() {
 
         setupUI()
         initWebRTC()
+        initAI()
 
         connectivityManager = getSystemService<ConnectivityManager>()!!
         requestWifiNetwork()
@@ -275,6 +296,12 @@ class MainActivity : AppCompatActivity() {
             liveDot.setBackgroundResource(R.drawable.shape_dot_connecting)
             liveText.setTextColor("#FEF08A".toColorInt())
             liveText.text = getString(R.string.state_connecting)
+            
+            babyIndicator.animate().alpha(0f).setDuration(300).setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    babyIndicator.visibility = View.GONE
+                }
+            }).start()
         }
     }
 
@@ -313,6 +340,14 @@ class MainActivity : AppCompatActivity() {
         surfaceView.init(eglBaseContext, null)
         surfaceView.setEnableHardwareScaler(true)
         surfaceView.setMirror(false)
+    }
+
+    private fun initAI() {
+        val options = FaceDetectorOptions.Builder()
+            .setPerformanceMode(FaceDetectorOptions.PERFORMANCE_MODE_FAST)
+            .setClassificationMode(FaceDetectorOptions.CLASSIFICATION_MODE_ALL)
+            .build()
+        faceDetector = FaceDetection.getClient(options)
     }
 
     private fun requestWifiNetwork() {
@@ -364,6 +399,8 @@ class MainActivity : AppCompatActivity() {
                 val track = receiver?.track() as? VideoTrack
                 runOnUiThread {
                     track?.addSink(surfaceView)
+                    // Add AI Sink
+                    track?.addSink { frame -> analyzeFrame(frame) }
                     setUiStateLive()
                 }
             }
@@ -392,6 +429,123 @@ class MainActivity : AppCompatActivity() {
             override fun onCreateFailure(p0: String?) {}
             override fun onSetFailure(p0: String?) {}
         }, constraints)
+    }
+
+    private fun analyzeFrame(frame: VideoFrame) {
+        val currentTime = System.currentTimeMillis()
+        if (isAnalyzing || currentTime - lastAnalysisTime < 1000) return // Analyze once per second max
+
+        isAnalyzing = true
+        lastAnalysisTime = currentTime
+
+        // SCALE DOWN: 1024x768 -> 320x240 for massive speedup
+        val scaledBuffer = frame.buffer.cropAndScale(0, 0, frame.buffer.width, frame.buffer.height, 320, 240)
+        frame.retain() // Retain the frame for its rotation info
+        
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                val buffer = scaledBuffer.toI420()
+                scaledBuffer.release() // Release the scaled buffer immediately after conversion
+
+                if (buffer != null) {
+                    val width = buffer.width
+                    val height = buffer.height
+                    val argbPixels = IntArray(width * height)
+                    val yBuffer = buffer.dataY
+                    for (y in 0 until height) {
+                        for (x in 0 until width) {
+                            val yVal = yBuffer.get(y * buffer.strideY + x).toInt() and 0xFF
+                            argbPixels[y * width + x] = Color.rgb(yVal, yVal, yVal)
+                        }
+                    }
+                    
+                    val bitmap = Bitmap.createBitmap(argbPixels, width, height, Bitmap.Config.ARGB_8888)
+                    val inputImage = InputImage.fromBitmap(bitmap, frame.rotation)
+
+                    faceDetector.process(inputImage)
+                        .addOnCompleteListener {
+                            buffer.release()
+                            frame.release()
+                            isAnalyzing = false
+                        }
+                        .addOnSuccessListener { faces ->
+                            if (faces.isEmpty()) {
+                                updateBabyState("detecting")
+                                sleepingFramesCount = 0
+                            } else {
+                                val face = faces[0]
+                                val leftOpen = face.leftEyeOpenProbability ?: -1f
+                                val rightOpen = face.rightEyeOpenProbability ?: -1f
+                                
+                                if (leftOpen > 0.2f || rightOpen > 0.2f) {
+                                    updateBabyState("awake")
+                                    sleepingFramesCount = 0
+                                } else if (leftOpen != -1f && rightOpen != -1f) {
+                                    sleepingFramesCount++
+                                    if (sleepingFramesCount >= requiredSleepingFrames) {
+                                        updateBabyState("sleeping")
+                                    }
+                                }
+                            }
+                        }
+                } else {
+                    frame.release()
+                    isAnalyzing = false
+                }
+            } catch (e: Exception) {
+                frame.release()
+                isAnalyzing = false
+            }
+        }
+    }
+
+    private fun updateBabyState(state: String) {
+        runOnUiThread {
+            when (state) {
+                "awake" -> {
+                    if (babyIndicator.visibility != View.GONE) {
+                        babyIndicator.animate().alpha(0f).setDuration(300).setListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+                                babyIndicator.visibility = View.GONE
+                            }
+                        }).start()
+                    }
+                    monitoringGlow.clearAnimation()
+                    monitoringGlow.animate().alpha(0f).setDuration(500).start()
+                }
+                "detecting" -> {
+                    if (monitoringGlow.animation == null) {
+                        monitoringGlow.animate().alpha(1f).setDuration(500).setListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+                                if (monitoringGlow.animation == null) {
+                                    val glowPulse = AnimationUtils.loadAnimation(this@MainActivity, R.anim.glow_pulse)
+                                    monitoringGlow.startAnimation(glowPulse)
+                                }
+                            }
+                        }).start()
+                    }
+                    if (babyIndicator.visibility != View.GONE) {
+                        babyIndicator.animate().alpha(0f).setDuration(300).setListener(object : AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: Animator) {
+                                babyIndicator.visibility = View.GONE
+                            }
+                        }).start()
+                    }
+                }
+                "sleeping" -> {
+                    val sleepingText = getString(R.string.baby_state_sleeping)
+                    if (babyText.text != sleepingText || babyIndicator.visibility != View.VISIBLE) {
+                        babyText.text = sleepingText
+                        babyIndicator.visibility = View.VISIBLE
+                        babyIndicator.alpha = 0f
+                        babyIndicator.animate().alpha(1f).setDuration(300).setListener(null).start()
+                        babyIndicator.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                    }
+                    monitoringGlow.clearAnimation()
+                    monitoringGlow.animate().alpha(0f).setDuration(500).start()
+                }
+            }
+        }
     }
 
     private fun sendWhepOffer(sdp: String) {
@@ -432,5 +586,6 @@ class MainActivity : AppCompatActivity() {
         connectivityManager.bindProcessToNetwork(null)
         peerConnection?.close()
         surfaceView.release()
+        faceDetector.close()
     }
 }

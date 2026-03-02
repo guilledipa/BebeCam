@@ -3,4 +3,7 @@
     <string name="state_connecting">CONECTANDO…</string>
     <string name="state_live">EN VIVO</string>
     <string name="percentage_format">%1$d%%</string>
+    <string name="baby_state_sleeping">😴 DURMIENDO</string>
+    <string name="baby_state_awake">👀 DESPIERTO</string>
+    <string name="baby_state_detecting">🔍 DETECTANDO…</string>
 </resources>

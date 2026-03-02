@@ -115,6 +115,32 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Baby AI Indicator (Sleeping Pill) -->
+        <LinearLayout
+            android:id="@+id/babyIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="120dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="10dp"
+            android:background="@drawable/bg_baby_indicator"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/babyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/baby_state_sleeping"
+                android:fontFamily="@font/outfit"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF" />
+        </LinearLayout>
+
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyle"
@@ -219,6 +245,15 @@
                 android:src="@drawable/ic_night_mode_24"
                 app:tint="#FFFFFF" />
         </LinearLayout>
+
+        <!-- Monitoring Glow Layer (Edge highlight) - ON TOP OF EVERYTHING -->
+        <View
+            android:id="@+id/monitoringGlow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_monitoring_glow"
+            android:alpha="0.0" />
+
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
