@@ -4,27 +4,221 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_dark"
+    android:background="@drawable/bg_gradient"
     tools:context=".MainActivity">
 
-    <WebView
-        android:id="@+id/webView"
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/surfaceView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <!-- Overlays for effects -->
+    <View
+        android:id="@+id/brightnessOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@android:color/black"
+        android:alpha="0.0"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/nightOverlay"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#BF000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- UI Layer -->
+    <FrameLayout
+        android:id="@+id/interactionLayer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/topBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="64dp"
+            android:paddingBottom="48dp"
+            android:gravity="center_vertical"
+            android:background="@drawable/gradient_top"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/brandTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="BebeCam"
+                    android:textSize="24sp"
+                    android:fontFamily="@font/outfit"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF" />
+
+                <TextView
+                    android:id="@+id/brandSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MONITOR INTELIGENTE"
+                    android:fontFamily="@font/outfit"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#818CF8"
+                    android:letterSpacing="0.15" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/liveIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:background="@drawable/bg_live_indicator_connecting">
+
+                <View
+                    android:id="@+id/liveDot"
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/shape_dot_connecting" />
+
+                <TextView
+                    android:id="@+id/liveText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/state_connecting"
+                    android:fontFamily="@font/outfit"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:textColor="#FEF08A" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+        <!-- Settings Panel -->
+        <LinearLayout
+            android:id="@+id/settingsPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="140dp"
+            android:padding="20dp"
+            android:background="@drawable/bg_controls_bar"
+            android:visibility="invisible"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Brillo"
+                    android:fontFamily="@font/outfit"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#CBD5E1" />
+                <TextView
+                    android:id="@+id/valBrightness"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:fontFamily="@font/outfit"
+                    android:textColor="#CBD5E1"
+                    tools:text="100%"/>
+            </LinearLayout>
+            <SeekBar
+                android:id="@+id/sliderBrightness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp"
+                android:max="180"
+                android:progress="80"
+                android:splitTrack="false"
+                android:thumb="@drawable/seek_bar_thumb"
+                android:progressDrawable="@drawable/seek_bar_progress" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/bottomBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="40dp"
+            android:gravity="center"
+            android:background="@drawable/bg_controls_bar">
+
+            <ImageButton
+                android:id="@+id/btnSettings"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="16dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_control_button"
+                android:src="@drawable/ic_settings_24"
+                app:tint="#CBD5E1" />
+
+            <ImageButton
+                android:id="@+id/btnRefresh"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="16dp"
+                android:layout_marginHorizontal="12dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_control_button"
+                android:src="@drawable/ic_refresh_24"
+                app:tint="#F8FAFC" />
+
+            <ImageButton
+                android:id="@+id/btnNightMode"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:padding="16dp"
+                android:scaleType="fitCenter"
+                android:background="@drawable/bg_control_button"
+                android:src="@drawable/ic_night_mode_24"
+                app:tint="#FFFFFF" />
+        </LinearLayout>
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -4,7 +4,7 @@
         <shape android:shape="rectangle">
             <corners android:radius="4dp" />
             <solid android:color="#331E293B" /> <!-- 20% slate -->
-            <size android:height="6dp" />
+            <size android:height="4dp" />
         </shape>
     </item>
     <item android:id="@android:id/progress">

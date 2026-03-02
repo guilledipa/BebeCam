@@ -1,164 +1,417 @@
 package com.bebecam
 
-import android.annotation.SuppressLint
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.PictureInPictureParams
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.wifi.WifiNetworkSpecifier
-import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.util.Rational
+import android.view.HapticFeedbackConstants
 import android.view.View
-import android.webkit.JavascriptInterface
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.view.animation.AnimationUtils
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ProgressBar
+import android.widget.SeekBar
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.getSystemService
+import androidx.core.graphics.toColorInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.webrtc.DataChannel
+import org.webrtc.DefaultVideoDecoderFactory
+import org.webrtc.DefaultVideoEncoderFactory
+import org.webrtc.EglBase
+import org.webrtc.IceCandidate
+import org.webrtc.MediaConstraints
+import org.webrtc.MediaStream
+import org.webrtc.MediaStreamTrack
+import org.webrtc.PeerConnection
+import org.webrtc.PeerConnectionFactory
+import org.webrtc.RtpReceiver
+import org.webrtc.RtpTransceiver
+import org.webrtc.SdpObserver
+import org.webrtc.SessionDescription
+import org.webrtc.SurfaceViewRenderer
+import org.webrtc.VideoTrack
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var webView: WebView
+    private lateinit var surfaceView: SurfaceViewRenderer
     private lateinit var progressBar: ProgressBar
+
+    // UI Elements
+    private lateinit var interactionLayer: View
+    private lateinit var topBar: View
+    private lateinit var bottomBar: View
+    private lateinit var settingsPanel: View
+    private lateinit var nightOverlay: View
+    private lateinit var brightnessOverlay: View
+    private lateinit var liveIndicator: LinearLayout
+    private lateinit var liveDot: View
+    private lateinit var liveText: TextView
+    private lateinit var btnRefresh: ImageButton
+    private lateinit var btnNightMode: ImageButton
+    private lateinit var btnSettings: ImageButton
+    private lateinit var sliderBrightness: SeekBar
+    private lateinit var valBrightness: TextView
+    private var isNightMode = false
+    private var isSettingsOpen = false
+
+    // UI Auto-hide
+    private val hideHandler = Handler(Looper.getMainLooper())
+    private val hideUIRunnable = Runnable { hideUI() }
+    private var isUIHidden = false
+
     private val logTag = "BebeCam"
     private val apSsid = "BebeCam"
     private val apPass = "bebecam_auto"
-    private val dashboardUrl = "http://192.168.4.1:8080"
+    private val whepUrl = "http://192.168.4.1:8080/bebe/whep"
 
     private lateinit var connectivityManager: ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
-    // Haptic feedback interface for the WebView
-    inner class WebAppInterface {
-        @Suppress("unused") // Used by the WebView
-        @JavascriptInterface
-        fun performHapticFeedback(effect: String) {
-            val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(VIBRATOR_SERVICE) as Vibrator
-            }
+    // WebRTC Components
+    private lateinit var eglBaseContext: EglBase.Context
+    private lateinit var peerConnectionFactory: PeerConnectionFactory
+    private var peerConnection: PeerConnection? = null
 
-            val vibrationEffect = when (effect) {
-                "tick" -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
-                "click" -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
-                "snap" -> VibrationEffect.createOneShot(25, 190) // A refined, single pulse
-                else -> {
-                    val timings = effect.split(",").map { it.trim().toLong() }.toLongArray()
-                    if (timings.isNotEmpty()) {
-                        VibrationEffect.createWaveform(timings, -1)
-                    } else {
-                        null
-                    }
-                }
-            }
-            vibrationEffect?.let { vibrator.vibrate(it) }
-        }
-    }
+    // OkHttp Client
+    private val okHttpClient = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        webView = findViewById(R.id.webView)
+        // Bind all views
+        surfaceView = findViewById(R.id.surfaceView)
         progressBar = findViewById(R.id.progressBar)
-        setupWebView()
+        interactionLayer = findViewById(R.id.interactionLayer)
+        topBar = findViewById(R.id.topBar)
+        bottomBar = findViewById(R.id.bottomBar)
+        settingsPanel = findViewById(R.id.settingsPanel)
+        nightOverlay = findViewById(R.id.nightOverlay)
+        brightnessOverlay = findViewById(R.id.brightnessOverlay)
+        liveIndicator = findViewById(R.id.liveIndicator)
+        liveDot = findViewById(R.id.liveDot)
+        liveText = findViewById(R.id.liveText)
+        btnRefresh = findViewById(R.id.btnRefresh)
+        btnNightMode = findViewById(R.id.btnNightMode)
+        btnSettings = findViewById(R.id.btnSettings)
+        sliderBrightness = findViewById(R.id.sliderBrightness)
+        valBrightness = findViewById(R.id.valBrightness)
+
+        setupUI()
+        initWebRTC()
 
         connectivityManager = getSystemService<ConnectivityManager>()!!
         requestWifiNetwork()
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView() {
-        webView.visibility = View.INVISIBLE
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            mediaPlaybackRequiresUserGesture = false // Allow autoplay video
-            mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+    private fun setupUI() {
+        interactionLayer.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            if (isSettingsOpen) {
+                toggleSettingsPanel(false)
+                return@setOnClickListener
+            }
+            if (isUIHidden) wakeUI() else hideUI()
         }
 
-        webView.webViewClient = object : WebViewClient() {
-            override fun onPageFinished(view: WebView?, url: String?) {
-                super.onPageFinished(view, url)
-                progressBar.visibility = View.GONE
-                webView.visibility = View.VISIBLE
-            }
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false
-            }
+        btnRefresh.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+            setUiStateConnecting()
+            peerConnection?.close()
+            startWebRTCStream()
+            wakeUI()
         }
 
-        // Expose the haptic feedback interface to the WebView
-        webView.addJavascriptInterface(WebAppInterface(), "Android")
+        btnNightMode.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            isNightMode = !isNightMode
+            nightOverlay.visibility = if (isNightMode) View.VISIBLE else View.GONE
+            btnNightMode.alpha = if (isNightMode) 0.5f else 1.0f
+            wakeUI()
+        }
+
+        btnSettings.setOnClickListener {
+            it.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
+            toggleSettingsPanel(!isSettingsOpen)
+        }
+
+        setupSliders()
+
+        topBar.setOnClickListener { wakeUI() }
+        bottomBar.setOnClickListener { wakeUI() }
+        settingsPanel.setOnClickListener { wakeUI() }
+
+        wakeUI()
+    }
+
+    private fun setupSliders() {
+        // Init values
+        updateVideoEffects()
+
+        val sliderListener = object : SeekBar.OnSeekBarChangeListener {
+            private var lastSteppedProgress = -1
+            
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                val stepped = (progress / 10) * 10
+                if (stepped != lastSteppedProgress) {
+                    lastSteppedProgress = stepped
+                    
+                    // Specific Haptics
+                    val actualVal = if (seekBar.id == R.id.sliderBrightness) stepped + 20 else stepped + 50
+                    if (actualVal == 100) {
+                        seekBar.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
+                    } else {
+                        seekBar.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                    }
+                    
+                    updateVideoEffects()
+                }
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) { wakeUI() }
+            override fun onStopTrackingTouch(seekBar: SeekBar?) { wakeUI() }
+        }
+
+        sliderBrightness.setOnSeekBarChangeListener(sliderListener)
+    }
+
+    private fun updateVideoEffects() {
+        val bProgress = (sliderBrightness.progress / 10) * 10 + 20
+        
+        valBrightness.text = "$bProgress%"
+
+        // 1. BRIGHTNESS (via dual-mode overlay)
+        if (bProgress < 100) {
+            brightnessOverlay.setBackgroundColor(Color.BLACK)
+            brightnessOverlay.alpha = (100 - bProgress) / 100f * 0.8f
+        } else if (bProgress > 100) {
+            brightnessOverlay.setBackgroundColor(Color.WHITE)
+            brightnessOverlay.alpha = (bProgress - 100) / 100f * 0.4f
+        } else {
+            brightnessOverlay.alpha = 0f
+        }
+    }
+
+    private fun toggleSettingsPanel(show: Boolean) {
+        isSettingsOpen = show
+        if (show) {
+            hideHandler.removeCallbacks(hideUIRunnable)
+            settingsPanel.translationY = 50f
+            settingsPanel.alpha = 0f
+            settingsPanel.visibility = View.VISIBLE
+            settingsPanel.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(300)
+                .setListener(null)
+                .start()
+        } else {
+            settingsPanel.animate()
+                .translationY(50f)
+                .alpha(0f)
+                .setDuration(300)
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        settingsPanel.visibility = View.INVISIBLE
+                    }
+                })
+                .start()
+            wakeUI()
+        }
+    }
+
+    private fun wakeUI() {
+        hideHandler.removeCallbacks(hideUIRunnable)
+        if (isUIHidden) {
+            isUIHidden = false
+            topBar.visibility = View.VISIBLE
+            topBar.animate().translationY(0f).alpha(1f).setDuration(300).setListener(null).start()
+            bottomBar.visibility = View.VISIBLE
+            bottomBar.animate().translationY(0f).alpha(1f).setDuration(300).setListener(null).start()
+        }
+        if (!isSettingsOpen) {
+            hideHandler.postDelayed(hideUIRunnable, 4000)
+        }
+    }
+
+    private fun hideUI() {
+        if (isSettingsOpen || isUIHidden) return
+        isUIHidden = true
+        topBar.animate().translationY(-topBar.height.toFloat()).alpha(0f).setDuration(500)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    topBar.visibility = View.INVISIBLE
+                }
+            }).start()
+        bottomBar.animate().translationY(bottomBar.height.toFloat()).alpha(0f).setDuration(500)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    bottomBar.visibility = View.INVISIBLE
+                }
+            }).start()
+    }
+
+    private fun setUiStateConnecting() {
+        runOnUiThread {
+            progressBar.visibility = View.VISIBLE
+            liveDot.clearAnimation()
+            liveIndicator.setBackgroundResource(R.drawable.bg_live_indicator_connecting)
+            liveDot.setBackgroundResource(R.drawable.shape_dot_connecting)
+            liveText.setTextColor("#FEF08A".toColorInt())
+            liveText.text = getString(R.string.state_connecting)
+        }
+    }
+
+    private fun setUiStateLive() {
+        runOnUiThread {
+            progressBar.visibility = View.GONE
+            liveIndicator.setBackgroundResource(R.drawable.bg_live_indicator_live)
+            liveDot.setBackgroundResource(R.drawable.shape_dot_live)
+            liveText.setTextColor("#C4B5FD".toColorInt())
+            liveText.text = getString(R.string.state_live)
+            val pulse = AnimationUtils.loadAnimation(this, R.anim.pulse)
+            liveDot.startAnimation(pulse)
+        }
+    }
+
+    private fun initWebRTC() {
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(this)
+                .setEnableInternalTracer(true)
+                .createInitializationOptions()
+        )
+        eglBaseContext = EglBase.create().eglBaseContext
+        val options = PeerConnectionFactory.Options()
+        peerConnectionFactory = PeerConnectionFactory.builder()
+            .setOptions(options)
+            .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBaseContext, true, true))
+            .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBaseContext))
+            .createPeerConnectionFactory()
+        surfaceView.init(eglBaseContext, null)
+        surfaceView.setEnableHardwareScaler(true)
+        surfaceView.setMirror(false)
     }
 
     private fun requestWifiNetwork() {
-        Log.d(logTag, "Requesting binding to specific Wi-Fi: $apSsid")
-
+        setUiStateConnecting()
         val specifier = WifiNetworkSpecifier.Builder()
             .setSsid(apSsid)
             .setWpa2Passphrase(apPass)
             .build()
-
         val request = NetworkRequest.Builder()
             .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
             .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_RESTRICTED)
             .setNetworkSpecifier(specifier)
             .build()
-
         networkCallback = object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 super.onAvailable(network)
-                Log.d(logTag, "Network Available: $network")
-                // The core magic: This binds the app's WebView and WebRTC to strictly use
-                // the BebeCam offline Wi-Fi, leaving the 4G/5G radio fully functional
-                // for the rest of the Android OS (WhatsApp, Maps, etc.)
                 connectivityManager.bindProcessToNetwork(network)
-                
-                // Load the Dashboard now that the native OS route is established
-                runOnUiThread {
-                    val urlWithCacheBuster = "$dashboardUrl?t=" + System.currentTimeMillis()
-                    Log.d(logTag, "Loading BebeCam Dashboard: $urlWithCacheBuster")
-                    webView.loadUrl(urlWithCacheBuster)
-                }
+                runOnUiThread { startWebRTCStream() }
             }
-
             override fun onLost(network: Network) {
                 super.onLost(network)
-                Log.d(logTag, "Network Lost")
                 connectivityManager.bindProcessToNetwork(null)
+                setUiStateConnecting()
             }
         }
-
         connectivityManager.requestNetwork(request, networkCallback!!)
+    }
+
+    private fun startWebRTCStream() {
+        val rtcConfig = PeerConnection.RTCConfiguration(emptyList())
+        rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+        peerConnection = peerConnectionFactory.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
+            override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
+            override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
+            override fun onIceConnectionReceivingChange(p0: Boolean) {}
+            override fun onIceGatheringChange(p0: PeerConnection.IceGatheringState?) {}
+            override fun onIceCandidate(p0: IceCandidate?) {}
+            override fun onIceCandidatesRemoved(p0: Array<out IceCandidate>?) {}
+            override fun onAddStream(p0: MediaStream?) {}
+            override fun onRemoveStream(p0: MediaStream?) {}
+            override fun onDataChannel(p0: DataChannel?) {}
+            override fun onRenegotiationNeeded() {}
+            override fun onAddTrack(receiver: RtpReceiver?, streams: Array<out MediaStream>?) {
+                val track = receiver?.track() as? VideoTrack
+                runOnUiThread {
+                    track?.addSink(surfaceView)
+                    setUiStateLive()
+                }
+            }
+        })
+        peerConnection?.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
+            RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY))
+        peerConnection?.createOffer(object : SdpObserver {
+            override fun onCreateSuccess(sdp: SessionDescription) {
+                peerConnection?.setLocalDescription(object : SdpObserver {
+                    override fun onCreateSuccess(p0: SessionDescription?) {}
+                    override fun onSetSuccess() { sendWhepOffer(sdp.description) }
+                    override fun onCreateFailure(p0: String?) {}
+                    override fun onSetFailure(p0: String?) {}
+                }, sdp)
+            }
+            override fun onSetSuccess() {}
+            override fun onCreateFailure(p0: String?) {}
+            override fun onSetFailure(p0: String?) {}
+        }, MediaConstraints())
+    }
+
+    private fun sendWhepOffer(sdp: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val request = Request.Builder()
+                    .url(whepUrl)
+                    .post(sdp.toRequestBody("application/sdp".toMediaType()))
+                    .build()
+                okHttpClient.newCall(request).execute().use { response ->
+                    if (response.isSuccessful) {
+                        val answerSdp = response.body.string()
+                        val sessionDesc = SessionDescription(SessionDescription.Type.ANSWER, answerSdp)
+                        peerConnection?.setRemoteDescription(object : SdpObserver {
+                            override fun onCreateSuccess(p0: SessionDescription?) {}
+                            override fun onSetSuccess() {}
+                            override fun onCreateFailure(p0: String?) {}
+                            override fun onSetFailure(p0: String?) {}
+                        }, sessionDesc)
+                    }
+                }
+            } catch (e: Exception) {
+                runOnUiThread { Toast.makeText(this@MainActivity, "Connection Error", Toast.LENGTH_SHORT).show() }
+            }
+        }
     }
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Automatically enter Picture-in-Picture mode when user presses the Home button
-        Log.d(logTag, "Entering native Picture-in-Picture mode")
-        val params = PictureInPictureParams.Builder()
-            .setAspectRatio(Rational(4, 3)) // Ideal aspect ratio for the camera feed
-            .build()
+        val params = PictureInPictureParams.Builder().setAspectRatio(Rational(4, 3)).build()
         enterPictureInPictureMode(params)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        networkCallback?.let {
-            connectivityManager.unregisterNetworkCallback(it)
-        }
+        hideHandler.removeCallbacks(hideUIRunnable)
+        networkCallback?.let { connectivityManager.unregisterNetworkCallback(it) }
         connectivityManager.bindProcessToNetwork(null)
+        peerConnection?.close()
+        surfaceView.release()
     }
 }

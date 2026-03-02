@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">BebeCam</string>
+    <string name="state_connecting">CONECTANDO...</string>
+    <string name="state_live">EN VIVO</string>
 </resources>

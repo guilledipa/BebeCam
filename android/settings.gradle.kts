@@ -13,6 +13,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://www.jitpack.io") } // Added for Stream WebRTC
     }
 }
 rootProject.name = "BebeCam"
