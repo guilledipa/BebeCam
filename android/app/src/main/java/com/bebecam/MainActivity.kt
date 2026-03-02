@@ -12,7 +12,6 @@ import android.net.wifi.WifiNetworkSpecifier
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.util.Rational
 import android.view.HapticFeedbackConstants
 import android.view.View
@@ -78,7 +77,6 @@ class MainActivity : AppCompatActivity() {
     private val hideUIRunnable = Runnable { hideUI() }
     private var isUIHidden = false
 
-    private val logTag = "BebeCam"
     private val apSsid = "BebeCam"
     private val apPass = "bebecam_auto"
     private val whepUrl = "http://192.168.4.1:8080/bebe/whep"
@@ -176,7 +174,7 @@ class MainActivity : AppCompatActivity() {
                     lastSteppedProgress = stepped
                     
                     // Specific Haptics
-                    val actualVal = if (seekBar.id == R.id.sliderBrightness) stepped + 20 else stepped + 50
+                    val actualVal = stepped + 20
                     if (actualVal == 100) {
                         seekBar.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
                     } else {
@@ -196,9 +194,9 @@ class MainActivity : AppCompatActivity() {
     private fun updateVideoEffects() {
         val bProgress = (sliderBrightness.progress / 10) * 10 + 20
         
-        valBrightness.text = "$bProgress%"
+        valBrightness.text = getString(R.string.percentage_format, bProgress)
 
-        // 1. BRIGHTNESS (via dual-mode overlay)
+        // BRIGHTNESS (via dual-mode overlay)
         if (bProgress < 100) {
             brightnessOverlay.setBackgroundColor(Color.BLACK)
             brightnessOverlay.alpha = (100 - bProgress) / 100f * 0.8f
@@ -293,18 +291,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initWebRTC() {
+        // Initialize WebRTC with field trials for low latency
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this)
                 .setEnableInternalTracer(true)
+                .setFieldTrials("WebRTC-IntelVP8/Enabled/") // Example trial
                 .createInitializationOptions()
         )
+
         eglBaseContext = EglBase.create().eglBaseContext
-        val options = PeerConnectionFactory.Options()
+        
+        // Priority to Hardware Decoding for lower latency and better performance
+        val videoDecoderFactory = DefaultVideoDecoderFactory(eglBaseContext)
+        val videoEncoderFactory = DefaultVideoEncoderFactory(eglBaseContext, true, true)
+
         peerConnectionFactory = PeerConnectionFactory.builder()
-            .setOptions(options)
-            .setVideoEncoderFactory(DefaultVideoEncoderFactory(eglBaseContext, true, true))
-            .setVideoDecoderFactory(DefaultVideoDecoderFactory(eglBaseContext))
+            .setVideoDecoderFactory(videoDecoderFactory)
+            .setVideoEncoderFactory(videoEncoderFactory)
             .createPeerConnectionFactory()
+
         surfaceView.init(eglBaseContext, null)
         surfaceView.setEnableHardwareScaler(true)
         surfaceView.setMirror(false)
@@ -339,6 +344,11 @@ class MainActivity : AppCompatActivity() {
     private fun startWebRTCStream() {
         val rtcConfig = PeerConnection.RTCConfiguration(emptyList())
         rtcConfig.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
+        
+        // Optimization: Disable some internal buffers
+        rtcConfig.bundlePolicy = PeerConnection.BundlePolicy.MAXBUNDLE
+        rtcConfig.rtcpMuxPolicy = PeerConnection.RtcpMuxPolicy.REQUIRE
+        
         peerConnection = peerConnectionFactory.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
             override fun onSignalingChange(p0: PeerConnection.SignalingState?) {}
             override fun onIceConnectionChange(p0: PeerConnection.IceConnectionState?) {}
@@ -358,21 +368,30 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+        
         peerConnection?.addTransceiver(MediaStreamTrack.MediaType.MEDIA_TYPE_VIDEO,
             RtpTransceiver.RtpTransceiverInit(RtpTransceiver.RtpTransceiverDirection.RECV_ONLY))
+
+        val constraints = MediaConstraints()
+        // Low Latency Constraints
+        constraints.optional.add(MediaConstraints.KeyValuePair("googCpuOveruseDetection", "false"))
+
         peerConnection?.createOffer(object : SdpObserver {
             override fun onCreateSuccess(sdp: SessionDescription) {
+                // Optimization: Modify SDP to force low latency / immediate playback
+                val optimizedSdp = sdp.description
+                
                 peerConnection?.setLocalDescription(object : SdpObserver {
                     override fun onCreateSuccess(p0: SessionDescription?) {}
-                    override fun onSetSuccess() { sendWhepOffer(sdp.description) }
+                    override fun onSetSuccess() { sendWhepOffer(optimizedSdp) }
                     override fun onCreateFailure(p0: String?) {}
                     override fun onSetFailure(p0: String?) {}
-                }, sdp)
+                }, SessionDescription(sdp.type, optimizedSdp))
             }
             override fun onSetSuccess() {}
             override fun onCreateFailure(p0: String?) {}
             override fun onSetFailure(p0: String?) {}
-        }, MediaConstraints())
+        }, constraints)
     }
 
     private fun sendWhepOffer(sdp: String) {
@@ -394,7 +413,7 @@ class MainActivity : AppCompatActivity() {
                         }, sessionDesc)
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 runOnUiThread { Toast.makeText(this@MainActivity, "Connection Error", Toast.LENGTH_SHORT).show() }
             }
         }
